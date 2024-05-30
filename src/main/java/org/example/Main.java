@@ -10,24 +10,17 @@ public class Main
 {
     public static void main(String[] args)
     {
-        try (ServerSocket serverSocket = new ServerSocket(8888) ;
-             Socket socket = serverSocket.accept() ;
-             InputStream is = socket.getInputStream();
-             DataInputStream dis = new DataInputStream(is))
+        try (ServerSocket serverSocket = new ServerSocket(8888);)
         {
             while (true)
             {
-                String message = dis.readUTF();
-                System.out.println("Received message: " + message);
-                if (message.equals("exit"))
-                {
-                    break;
-                }
+                Socket socket = serverSocket.accept();
+                new serverThread(socket).start();
             }
         }
         catch (IOException e)
         {
-            System.out.println("Quit: " + e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 }
