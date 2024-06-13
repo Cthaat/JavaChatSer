@@ -1,17 +1,14 @@
-package Sql;
+package org.Sql;
 
-import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.pool.DruidDataSourceFactory;
 import org.springframework.jdbc.support.JdbcUtils;
 
-import java.io.IOException;
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
-import javax.sql.DataSource;
-import javax.naming.spi.ObjectFactory;
 
 public class SQLUtils
 {
