@@ -42,25 +42,23 @@ public class publicRoomfind implements publicRoomFindSQL
                 int totalCount = jdbcTemplate.queryForObject(sqlCount, Integer.class);
                 int pageSize = 10;
                 int totalPages = (int) Math.ceil((double) totalCount / pageSize);
+                Jedis jedis = pool.getResource();
+                jedis.del("text");
                 for (int currentPage = 1; currentPage <= totalPages; currentPage++)
                 {
                     List<Map<String, Object>> result = jdbcTemplate.queryForList(sql, pageSize, (currentPage - 1) * pageSize);
-                    Jedis jedis = pool.getResource();
                     for (Map<String, Object> row : result)
                     {
                         // 以json形式存入redis
-                        System.out.println(row);
                         JavaTimeModule javaTimeModule = new JavaTimeModule();
                         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                         javaTimeModule.addSerializer(LocalDateTime.class,new LocalDateTimeSerializer(dateTimeFormatter));
                         mapper.registerModule(javaTimeModule);
                         String value = mapper.writeValueAsString(row);
-                        System.out.println(value);
-                        Map<String, Object> map = mapper.readValue(value, Map.class);
-                        System.out.println(map);
                         jedis.rpush("text" , value);
                     }
                 }
+                jedis.close();
             }
             catch (NumberFormatException e)
             {
