@@ -3,7 +3,7 @@ package org.Sql;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-public class find implements findSQL
+public class userFind implements userFindSQL
 {
 
     @Override

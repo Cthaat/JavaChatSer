@@ -14,9 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.Sql.querySql.getAllUserByJson;
-import static org.Sql.querySql.getUserByID;
-
 @WebServlet ("/hello")
 public class Main extends HttpServlet
 {
@@ -39,6 +36,5 @@ public class Main extends HttpServlet
         System.out.println(req.getHeader("userName"));
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.setContentType("application/json");
-        resp.getWriter().println(getUserByID(Integer.parseInt(req.getHeader("userID"))));
     }
 }

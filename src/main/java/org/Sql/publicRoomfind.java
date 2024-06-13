@@ -1,71 +1,25 @@
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+package org.Sql;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
-import org.Sql.SQLUtils;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import org.junit.Test;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.*;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
-
-
-public class testSql
+public class publicRoomfind implements publicRoomFindSQL
 {
-    @Test
-    public void getAllUser()
-    {
-        ObjectMapper mapper = new ObjectMapper();
-        try
-        {
-            String sql = "select * from users";
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(SQLUtils.getDataSource());
-            List<Map<String, Object>> result = jdbcTemplate.queryForList(sql);
-            String json = mapper.writeValueAsString(result);
-            System.out.println(result);
-            System.out.println(json);
-        }
-        catch (JsonProcessingException e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Test
-    public void test2()
-    {
-        boolean userExists = false;
-        try
-        {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(SQLUtils.getDataSource());
-            String sql = "select 1 from users where username = ? and password = ?";
-            userExists = Boolean.TRUE.equals(jdbcTemplate.queryForObject(sql , Boolean.class , "admin" , "123456..aa"));
-            System.out.println(userExists);
-        }
-        catch (DataAccessException e)
-        {
-            System.out.println(userExists);
-        }
-    }
-
-    @Test
-    public void test3()
+    @Override
+    public void loadPublicRoomToRedis()
     {
         ObjectMapper mapper = new ObjectMapper();
         try (InputStream is = this.getClass().getResourceAsStream("/redis.properties") ;
