@@ -31,5 +31,6 @@ public class Main extends HttpServlet
         System.out.println(req.getHeader("userName"));
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.setContentType("application/json");
+        resp.getWriter().println("{\"message\":\"Hello World\"}");
     }
 }
