@@ -118,4 +118,98 @@ public class testSql
             throw new RuntimeException(e);
         }
     }
+
+    @Test
+    public void test4()
+    {
+        ObjectMapper mapper = new ObjectMapper();
+        try (InputStream is = this.getClass().getResourceAsStream("/redis.properties") ;
+        )
+        {
+            Properties properties = new Properties();
+            properties.load(is);
+            JedisPoolConfig config = new JedisPoolConfig();
+            try (JedisPool pool = new JedisPool(
+                    config , properties.getProperty("redis.host") ,
+                    Integer.parseInt(properties.getProperty("redis.port")) ,
+                    Integer.parseInt(properties.getProperty("redis.timeout")) ,
+                    properties.getProperty("redis.password") ,
+                    Integer.parseInt(properties.getProperty("redis.database"))
+            ) ;)
+            {
+                JdbcTemplate jdbcTemplate = new JdbcTemplate(SQLUtils.getDataSource());
+                String sqlCount = "select count(*) from p2p_text where send_user_name = ? and recive_user_name = ? or send_user_name = ? and recive_user_name = ?";
+                String sql = "select * from p2p_text where send_user_name = ? and recive_user_name = ? or send_user_name = ? and recive_user_name = ? limit ? offset ?";
+                int totalCount = jdbcTemplate.queryForObject(sqlCount, Integer.class , "admin" , "testUser3" , "testUser3" , "admin");
+                int pageSize = 10;
+                int totalPages = (int) Math.ceil((double) totalCount / pageSize);
+                Jedis jedis = pool.getResource();
+                jedis.del("admin");
+                for (int currentPage = 1; currentPage <= totalPages; currentPage++)
+                {
+                    List<Map<String, Object>> result = jdbcTemplate.queryForList(sql,"admin" , "testUser3" , "testUser3" , "admin", pageSize, (currentPage - 1) * pageSize);
+                    for (Map<String, Object> row : result)
+                    {
+                        // 以json形式存入redis
+                        System.out.println(row);
+
+                        JavaTimeModule javaTimeModule = new JavaTimeModule();
+                        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                        javaTimeModule.addSerializer(LocalDateTime.class,new LocalDateTimeSerializer(dateTimeFormatter));
+                        mapper.registerModule(javaTimeModule);
+                        String value = mapper.writeValueAsString(row);
+
+                        System.out.println(value);
+
+                        Map<String, Object> map = mapper.readValue(value, Map.class);
+
+                        System.out.println(map);
+
+                        jedis.rpush("admin" , value);
+                    }
+                }
+                jedis.close();
+            }
+            catch (NumberFormatException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    public void test5()
+    {
+        boolean usernameExists = false;
+        try
+        {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(SQLUtils.getDataSource());
+            String sql = "select 1 from users where username = ?";
+            usernameExists = Boolean.TRUE.equals(jdbcTemplate.queryForObject(sql , Boolean.class , "admin1"));
+            System.out.println(usernameExists);
+        }
+        catch (DataAccessException e)
+        {
+            System.out.println(usernameExists);
+        }
+    }
+
+    @Test
+    public void test6()
+    {
+        try
+        {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(SQLUtils.getDataSource());
+            String sql = "insert into users (? , ? , ?) values (?, ?, ?)";
+            int result = jdbcTemplate.update(sql , "username" , "password" , "email" , "admin1" , "123456..aa" , "admin@123.com");
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
 }
