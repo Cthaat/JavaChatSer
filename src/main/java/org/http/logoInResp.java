@@ -4,13 +4,13 @@ import org.Sql.userFind;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 @WebServlet("/logoInResp")
 public class logoInResp extends HttpServlet
@@ -31,8 +31,15 @@ public class logoInResp extends HttpServlet
         userFind Find = new userFind();
         if(Find.userIsExist(userName , password))
         {
-            String value = mapper.writeValueAsString(Find.getUserInfo(userName));
-            resp.getWriter().println(value);
+            Map<String, Object> userMap = Find.getUserInfo(userName);
+            Set<String> keys = userMap.keySet();
+            for (String key : keys)
+            {
+                Cookie cookie = new Cookie(key, userMap.get(key).toString());
+                cookie.setMaxAge(60 * 60 * 24 * 365);
+                cookie.setPath("/");
+                resp.addCookie(cookie);
+            }
         }
         resp.setStatus(HttpServletResponse.SC_OK);
     }

@@ -9,7 +9,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
-@WebServlet ("/hello")
+@WebServlet ("/Main")
 public class Main extends HttpServlet
 {
     @Override
@@ -21,16 +21,11 @@ public class Main extends HttpServlet
     @Override
     protected void doPost(HttpServletRequest req , HttpServletResponse resp) throws ServletException, IOException
     {
-        String jsonString = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-        System.out.println(jsonString);
-        BufferedReader br = req.getReader();
-        String line = null;
-        while ((line = br.readLine())!= null) {
-            System.out.println(line);
+        System.out.println("Request Method: " + req.getMethod());
+        // 输出Coookie信息
+        String cookies = req.getHeader("Cookie");
+        if (cookies != null) {
+            System.out.println("Cookie: " + cookies);
         }
-        System.out.println(req.getHeader("userName"));
-        resp.setStatus(HttpServletResponse.SC_OK);
-        resp.setContentType("application/json");
-        resp.getWriter().println("{\"message\":\"Hello World\"}");
     }
 }
