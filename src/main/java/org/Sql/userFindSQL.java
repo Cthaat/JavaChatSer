@@ -12,5 +12,5 @@ public interface userFindSQL
     // 通过用户名获取用户信息
     public Map<String , Object> getUserInfo(String username);
     // 通过用户名获取好友列表
-    public List<Map<String, Object>> getFriendList(int userId);
+    public List<Map<String, Object>> getFriendList(String username);
 }

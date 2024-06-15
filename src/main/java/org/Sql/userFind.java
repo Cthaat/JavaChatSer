@@ -77,7 +77,7 @@ public class userFind implements userFindSQL
     }
 
     @Override
-    public List<Map<String, Object>> getFriendList(int userId)
+    public List<Map<String, Object>> getFriendList(String username)
     {
         try
         {
@@ -86,7 +86,7 @@ public class userFind implements userFindSQL
             // 定义SQL语句
             String sql = "select friend_id from p2p_relationship where user_id = ?";
             // 执行SQL语句，获取好友列表
-            List<Map<String, Object>> friendList = jdbcTemplate.queryForList(sql , userId);
+            List<Map<String, Object>> friendList = jdbcTemplate.queryForList(sql , username);
             return friendList;
         }
         catch (Exception e)

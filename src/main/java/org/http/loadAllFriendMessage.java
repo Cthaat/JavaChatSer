@@ -32,9 +32,9 @@ public class loadAllFriendMessage extends HttpServlet
             userFind userFind = new userFind();
             for (Cookie cookie : cookies)
             {
-                if (cookie.getName().equals("id"))
+                if (cookie.getName().equals("username"))
                 {
-                    String friendList = MAPPER.writeValueAsString(userFind.getFriendList(Integer.parseInt(cookie.getValue())));
+                    String friendList = MAPPER.writeValueAsString(userFind.getFriendList(cookie.getValue()));
                     resp.getWriter().write(friendList);
                 }
             }
