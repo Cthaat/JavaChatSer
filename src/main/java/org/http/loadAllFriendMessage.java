@@ -1,6 +1,8 @@
 package org.http;
 
 
+import org.Sql.userFind;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.Cookie;
@@ -9,8 +11,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebServlet ("/loadAllUsers")
-public class loadAllMessage extends HttpServlet
+import static org.http.logoInResp.MAPPER;
+
+@WebServlet ("/loadAllFriendMessage")
+public class loadAllFriendMessage extends HttpServlet
 {
     @Override
     protected void doGet(HttpServletRequest req , HttpServletResponse resp) throws ServletException, IOException
@@ -25,11 +29,13 @@ public class loadAllMessage extends HttpServlet
         Cookie[] cookies = req.getCookies();
         if (cookies!= null)
         {
+            userFind userFind = new userFind();
             for (Cookie cookie : cookies)
             {
-                if (cookie.getName().equals("username"))
+                if (cookie.getName().equals("id"))
                 {
-
+                    String friendList = MAPPER.writeValueAsString(userFind.getFriendList(Integer.parseInt(cookie.getValue())));
+                    resp.getWriter().write(friendList);
                 }
             }
         }

@@ -212,4 +212,22 @@ public class testSql
             throw new RuntimeException(e);
         }
     }
+
+    @Test
+    public void test7()
+    {
+        ObjectMapper mapper = new ObjectMapper();
+        try
+        {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(SQLUtils.getDataSource());
+            String sql = "select friend_id from p2p_relationship where user_id = 10000001";
+            List<Map<String, Object>> friendList = jdbcTemplate.queryForList(sql);
+            String json = mapper.writeValueAsString(friendList);
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+
+    }
 }

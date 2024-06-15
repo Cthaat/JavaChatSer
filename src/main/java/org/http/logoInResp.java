@@ -15,6 +15,7 @@ import java.util.*;
 @WebServlet("/logoInResp")
 public class logoInResp extends HttpServlet
 {
+    public static final ObjectMapper MAPPER = new ObjectMapper();
     @Override
     protected void doGet(HttpServletRequest req , HttpServletResponse resp) throws ServletException, IOException
     {
