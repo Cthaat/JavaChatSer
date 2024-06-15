@@ -34,7 +34,6 @@ public class delMyFriend extends HttpServlet
         Cookie[] cookies = req.getCookies();
         if (cookies!= null)
         {
-            userFind userFind = new userFind();
             for (Cookie cookie : cookies)
             {
                 if (cookie.getName().equals("username"))

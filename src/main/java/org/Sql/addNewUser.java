@@ -2,7 +2,7 @@ package org.Sql;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 
-public class addUser implements addUserSQL
+public class addNewUser implements addNewUserSQL
 {
     @Override
     public boolean addNewUser(String name , String username , String password)
