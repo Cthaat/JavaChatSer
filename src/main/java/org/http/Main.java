@@ -21,11 +21,6 @@ public class Main extends HttpServlet
     @Override
     protected void doPost(HttpServletRequest req , HttpServletResponse resp) throws ServletException, IOException
     {
-        System.out.println("Request Method: " + req.getMethod());
-        // 输出Coookie信息
-        String cookies = req.getHeader("Cookie");
-        if (cookies != null) {
-            System.out.println("Cookie: " + cookies);
-        }
+
     }
 }
