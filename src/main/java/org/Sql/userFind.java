@@ -7,7 +7,7 @@ import java.util.Map;
 
 public class userFind implements userFindSQL
 {
-
+    // 通过账户密码判断用户是否存在
     @Override
     public boolean userIsExist(String username , String password)
     {
@@ -25,6 +25,7 @@ public class userFind implements userFindSQL
         }
     }
 
+    // 判断用户名是否存在
     @Override
     public boolean userNameExists(String username)
     {
@@ -43,6 +44,7 @@ public class userFind implements userFindSQL
         }
     }
 
+    // 通过用户名获取用户信息
     @Override
     public Map<String, Object> getUserInfo(String username)
     {

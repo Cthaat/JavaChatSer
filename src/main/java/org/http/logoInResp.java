@@ -18,20 +18,27 @@ public class logoInResp extends HttpServlet
     @Override
     protected void doGet(HttpServletRequest req , HttpServletResponse resp) throws ServletException, IOException
     {
+        // 转发给POST方法
         this.doPost(req , resp);
     }
 
     @Override
     protected void doPost(HttpServletRequest req , HttpServletResponse resp) throws ServletException, IOException
     {
+        // 设置响应头
         resp.setContentType("application/json");
+        // 获取请求参数
         String userName = req.getHeader("userName");
         String password = req.getHeader("password");
+        // 验证用户信息
         userFind Find = new userFind();
+        // 验证成功
         if(Find.userIsExist(userName , password))
         {
+            // 设置cookie
             Map<String, Object> userMap = Find.getUserInfo(userName);
             Set<String> keys = userMap.keySet();
+            // 遍历map，设置cookie
             for (String key : keys)
             {
                 Cookie cookie = new Cookie(key, userMap.get(key).toString());
@@ -39,7 +46,8 @@ public class logoInResp extends HttpServlet
                 cookie.setPath("/");
                 resp.addCookie(cookie);
             }
+            // 响应成功
+            resp.setStatus(HttpServletResponse.SC_OK);
         }
-        resp.setStatus(HttpServletResponse.SC_OK);
     }
 }

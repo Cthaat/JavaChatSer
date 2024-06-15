@@ -18,15 +18,21 @@ import java.util.Properties;
 
 public class p2pRoomChat implements p2pRoomChatSQL
 {
+    // 加载两个人对话的redis缓存
     @Override
     public void loadMessagesFromTwoUsers(String user1 , String user2)
     {
+        // 创建mapper对象，用于转换json格式
         ObjectMapper mapper = new ObjectMapper();
+        // 读取redis.properties配置文件
         try (InputStream is = this.getClass().getResourceAsStream("/redis.properties") ;
         )
         {
+            // 注册 LocalDateTime 序列化器
             Properties properties = new Properties();
+            // 加载redis配置文件
             properties.load(is);
+            // 通过配置文件创建连接池
             JedisPoolConfig config = new JedisPoolConfig();
             try (JedisPool pool = new JedisPool(
                     config , properties.getProperty("redis.host") ,
@@ -37,15 +43,22 @@ public class p2pRoomChat implements p2pRoomChatSQL
             ) ;)
             {
                 JdbcTemplate jdbcTemplate = new JdbcTemplate(SQLUtils.getDataSource());
+                // 查询两人对话的消息总数
                 String sqlCount = "select count(*) from p2p_text where send_user_name = ? and recive_user_name = ? or send_user_name = ? and recive_user_name = ?";
+                // 查询两人对话的消息列表
                 String sql = "select * from p2p_text where send_user_name = ? and recive_user_name = ? or send_user_name = ? and recive_user_name = ? limit ? offset ?";
+                // 执行SQL语句
                 int totalCount = jdbcTemplate.queryForObject(sqlCount, Integer.class , user1 , user2 , user2 , user1);
                 int pageSize = 10;
+                // 计算总页数
                 int totalPages = (int) Math.ceil((double) totalCount / pageSize);
+                // 连接redis
                 Jedis jedis = pool.getResource();
                 jedis.del("admin");
+                // 遍历每一页
                 for (int currentPage = 1; currentPage <= totalPages; currentPage++)
                 {
+                    // 存入redis
                     List<Map<String, Object>> result = jdbcTemplate.queryForList(sql,user1 , user2 , user2 , user1, pageSize, (currentPage - 1) * pageSize);
                     for (Map<String, Object> row : result)
                     {
