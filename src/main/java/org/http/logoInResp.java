@@ -24,7 +24,6 @@ public class logoInResp extends HttpServlet
     @Override
     protected void doPost(HttpServletRequest req , HttpServletResponse resp) throws ServletException, IOException
     {
-        ObjectMapper mapper = new ObjectMapper();
         resp.setContentType("application/json");
         String userName = req.getHeader("userName");
         String password = req.getHeader("password");
