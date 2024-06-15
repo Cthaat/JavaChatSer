@@ -84,7 +84,7 @@ public class userFind implements userFindSQL
             // 创建一个JdbcTemplate对象
             JdbcTemplate jdbcTemplate = new JdbcTemplate(SQLUtils.getDataSource());
             // 定义SQL语句
-            String sql = "select friend_id from p2p_relationship where user_id = ?";
+            String sql = "select friend_name from p2p_relationship where user_name = ?";
             // 执行SQL语句，获取好友列表
             List<Map<String, Object>> friendList = jdbcTemplate.queryForList(sql , username);
             return friendList;
