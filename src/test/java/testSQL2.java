@@ -23,4 +23,12 @@ public class testSQL2
             throw new RuntimeException(e);
         }
     }
+
+    @Test
+    public void test2()
+    {
+        String json = "{"friend_name":"testUser3"}"
+
+    }
 }
+

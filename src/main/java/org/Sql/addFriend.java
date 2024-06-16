@@ -13,13 +13,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
-public class delFriend implements delFriendSQL
+public class addFriend implements addFriendSQL
 {
     @Override
-    public boolean delFriendByUsername(String username , String friendname) throws SQLException
+    public boolean addFriendByUsername(String username , String friendName) throws SQLException
     {
+        userFind find = new userFind();
+        if (!find.userNameExists(friendName))
+        {
+            return false;
+        }
         TransactionSynchronizationManager.initSynchronization();
         JdbcTemplate jdbcTemplate = new JdbcTemplate(SQLUtils.getDataSource());
         DataSource dataSource = jdbcTemplate.getDataSource();
@@ -27,9 +35,9 @@ public class delFriend implements delFriendSQL
         try
         {
             connection.setAutoCommit(false);
-            String sql = "delete from p2p_relationship where user_name = ? and friend_name = ?";
-            int result1 = jdbcTemplate.update(sql , username , friendname);
-            int result2 = jdbcTemplate.update(sql , friendname , username);
+            String sql = "insert into p2p_relationship  (user_name , friend_name) values (?,?)";
+            int result1 = jdbcTemplate.update(sql , username , friendName);
+            int result2 = jdbcTemplate.update(sql , friendName , username);
             if (result1 == 1 && result2 == 1)
             {
                 // 创建mapper对象，用于转换json格式

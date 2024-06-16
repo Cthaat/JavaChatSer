@@ -3,9 +3,13 @@ package org.Sql;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 
 public class userFind implements userFindSQL
 {
@@ -79,19 +83,77 @@ public class userFind implements userFindSQL
     @Override
     public List<Map<String, Object>> getFriendList(String username)
     {
-        try
+        // 创建mapper对象，用于转换json格式
+        ObjectMapper mapper = new ObjectMapper();
+        // 读取redis.properties配置文件
+        try (InputStream is = this.getClass().getResourceAsStream("/redis.properties") ;
+        )
         {
-            // 创建一个JdbcTemplate对象
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(SQLUtils.getDataSource());
-            // 定义SQL语句
-            String sql = "select friend_name from p2p_relationship where user_name = ?";
-            // 执行SQL语句，获取好友列表
-            List<Map<String, Object>> friendList = jdbcTemplate.queryForList(sql , username);
-            return friendList;
+            // 注册 LocalDateTime 序列化器
+            Properties properties = new Properties();
+            // 加载redis配置文件
+            properties.load(is);
+            // 通过配置文件创建连接池
+            JedisPoolConfig config = new JedisPoolConfig();
+            // 配置
+            try (JedisPool pool = new JedisPool(
+                    config , properties.getProperty("redis.host") ,
+                    Integer.parseInt(properties.getProperty("redis.port")) ,
+                    Integer.parseInt(properties.getProperty("redis.timeout")) ,
+                    properties.getProperty("redis.password") ,
+                    Integer.parseInt(properties.getProperty("redis.database"))
+            ) ;)
+            {
+                Jedis jedis = pool.getResource();
+                if (jedis.exists(username))
+                {
+                    List<Map<String, Object>> result = new ArrayList<>();
+                    // 从redis中获取好友列表
+                    List<String> friendListJson = jedis.lrange(username , 0 , -1);
+                    // 反序列化json格式
+                    for (String json : friendListJson)
+                    {
+                        Map<String, Object> map1 = mapper.readValue(json , Map.class);
+                        result.add(map1);
+                    }
+                    return result;
+                }
+                try
+                {
+                    // 创建一个JdbcTemplate对象
+                    JdbcTemplate jdbcTemplate = new JdbcTemplate(SQLUtils.getDataSource());
+                    // 定义SQL语句
+                    String sql = "select friend_name from p2p_relationship where user_name = ?";
+                    // 执行SQL语句，获取好友列表
+                    List<Map<String, Object>> friendList = jdbcTemplate.queryForList(sql , username);
+                    // 将好友信息存入redis
+                    for (Map<String, Object> map : friendList)
+                    {
+                        // 转换json格式
+                        String json = mapper.writeValueAsString(map);
+                        jedis.rpush(username , json);
+                    }
+                    // 设置过期时间
+                    jedis.expire(username , 60 * 60 * 24);
+                    // 关闭redis连接
+                    jedis.close();
+                    return friendList;
+                }
+                catch (Exception e)
+                {
+                    throw new RuntimeException(e);
+                }
+            }
+            catch (NumberFormatException e)
+            {
+                throw new RuntimeException(e);
+            }
         }
-        catch (Exception e)
+        catch (IOException e)
         {
             throw new RuntimeException(e);
         }
+
+
     }
 }
