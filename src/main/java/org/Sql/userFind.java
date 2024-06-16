@@ -11,10 +11,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-public class userFind implements userFindSQL
+public class userFind
 {
     // 通过账户密码判断用户是否存在
-    @Override
     public boolean userIsExist(String username , String password)
     {
         // 是否存在的标志
@@ -38,7 +37,6 @@ public class userFind implements userFindSQL
     }
 
     // 判断用户名是否存在
-    @Override
     public boolean userNameExists(String username)
     {
         // 定义一个布尔值变量，默认为false
@@ -61,7 +59,6 @@ public class userFind implements userFindSQL
     }
 
     // 通过用户名获取用户信息
-    @Override
     public Map<String, Object> getUserInfo(String username)
     {
         try
@@ -80,7 +77,6 @@ public class userFind implements userFindSQL
         }
     }
 
-    @Override
     public List<Map<String, Object>> getFriendList(String username)
     {
         // 创建mapper对象，用于转换json格式
@@ -153,7 +149,5 @@ public class userFind implements userFindSQL
         {
             throw new RuntimeException(e);
         }
-
-
     }
 }

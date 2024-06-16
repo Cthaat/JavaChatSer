@@ -1,5 +1,6 @@
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.Sql.SQLUtils;
+import org.Sql.p2pRoomChat;
 import org.junit.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -27,8 +28,8 @@ public class testSQL2
     @Test
     public void test2()
     {
-        String json = "{"friend_name":"testUser3"}"
-
+        p2pRoomChat p2p = new p2pRoomChat();
+        p2p.loadMessagesFromTwoUsers("admin","testUser3");
     }
 }
 

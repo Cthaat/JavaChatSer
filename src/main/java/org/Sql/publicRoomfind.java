@@ -16,10 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-public class publicRoomfind implements publicRoomFindSQL
+public class publicRoomfind
 {
     // 将公共聊天室中的数据存入redis
-    @Override
     public void loadPublicRoomToRedis()
     {
         // 创建mapper对象，用于转换json格式

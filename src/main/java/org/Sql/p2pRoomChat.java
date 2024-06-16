@@ -12,14 +12,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-public class p2pRoomChat implements p2pRoomChatSQL
+public class p2pRoomChat
 {
     // 加载两个人对话的redis缓存
-    @Override
     public void loadMessagesFromTwoUsers(String user1 , String user2)
     {
         // 创建mapper对象，用于转换json格式
@@ -54,7 +54,7 @@ public class p2pRoomChat implements p2pRoomChatSQL
                 int totalPages = (int) Math.ceil((double) totalCount / pageSize);
                 // 连接redis
                 Jedis jedis = pool.getResource();
-                jedis.del("admin");
+                jedis.del(user1+user2);
                 // 遍历每一页
                 for (int currentPage = 1; currentPage <= totalPages; currentPage++)
                 {
@@ -83,5 +83,81 @@ public class p2pRoomChat implements p2pRoomChatSQL
         {
             throw new RuntimeException(e);
         }
+    }
+
+
+    public List<Map<String, Object>> getMessages(String user1, String user2)
+    {
+        // 创建mapper对象，用于转换json格式
+        ObjectMapper mapper = new ObjectMapper();
+        // 读取redis.properties配置文件
+        try (InputStream is = this.getClass().getResourceAsStream("/redis.properties") ;
+        )
+        {
+            // 注册 LocalDateTime 序列化器
+            Properties properties = new Properties();
+            // 加载redis配置文件
+            properties.load(is);
+            // 通过配置文件创建连接池
+            JedisPoolConfig config = new JedisPoolConfig();
+            // 配置
+            try (JedisPool pool = new JedisPool(
+                    config , properties.getProperty("redis.host") ,
+                    Integer.parseInt(properties.getProperty("redis.port")) ,
+                    Integer.parseInt(properties.getProperty("redis.timeout")) ,
+                    properties.getProperty("redis.password") ,
+                    Integer.parseInt(properties.getProperty("redis.database"))
+            ) ;)
+            {
+                Jedis jedis = pool.getResource();
+                if (!jedis.exists(user1+user2) && !jedis.exists(user2+user1))
+                {
+                    this.loadMessagesFromTwoUsers(user1, user2);
+                }
+                if (jedis.exists(user1+user2) || jedis.exists(user2+user1))
+                {
+                    List<Map<String, Object>> result = new ArrayList<>();
+                    if (jedis.exists(user1+user2))
+                    {
+                        // 从redis中获取数据
+                        List<String> messages = jedis.lrange(user1+user2, 0, -1);
+                        JavaTimeModule javaTimeModule = new JavaTimeModule();
+                        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                        javaTimeModule.addSerializer(LocalDateTime.class,new LocalDateTimeSerializer(dateTimeFormatter));
+                        mapper.registerModule(javaTimeModule);
+                        for (String message : messages)
+                        {
+                            // 转换json格式
+                            Map<String, Object> map = mapper.readValue(message, Map.class);
+                            result.add(map);
+                        }
+                    }else if (jedis.exists(user2+user1))
+                    {
+                        // 从redis中获取数据
+                        List<String> messages = jedis.lrange(user1+user2, 0, -1);
+                        JavaTimeModule javaTimeModule = new JavaTimeModule();
+                        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                        javaTimeModule.addSerializer(LocalDateTime.class,new LocalDateTimeSerializer(dateTimeFormatter));
+                        mapper.registerModule(javaTimeModule);
+                        for (String message : messages)
+                        {
+                            // 转换json格式
+                            Map<String, Object> map = mapper.readValue(message, Map.class);
+                            result.add(map);
+                        }
+                    }
+                    return result;
+                }
+            }
+            catch (NumberFormatException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException(e);
+        }
+        return null;
     }
 }

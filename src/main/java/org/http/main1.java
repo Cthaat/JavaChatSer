@@ -7,7 +7,7 @@ public class main1
 {
     public static void main(String[] args)
     {
-        p2pRoomChat p2p = new p2pRoomChat();
-        p2p.loadMessagesFromTwoUsers("admin" , "testUser3");
+        p2pRoomChat p2p=new p2pRoomChat();
+        p2p.loadMessagesFromTwoUsers("admin","testUser3");
     }
 }
