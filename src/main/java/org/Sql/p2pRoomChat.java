@@ -12,10 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 public class p2pRoomChat
 {
@@ -70,6 +67,8 @@ public class p2pRoomChat
                         String value = mapper.writeValueAsString(row);
                         Map<String, Object> map = mapper.readValue(value , Map.class);
                         jedis.rpush(user1 + user2 , value);
+                        // 设置存活时间
+                        jedis.expire(user1 + user2 , 60 * 60 * 24);
                     }
                 }
                 jedis.close();
@@ -132,12 +131,13 @@ public class p2pRoomChat
                             result.add(map);
                         }
                     }
-                    else if (jedis.exists(user2 + user1))
+                    if (jedis.exists(user2 + user1))
                     {
                         // 从redis中获取数据
-                        List<String> messages = jedis.lrange(user1 + user2 , 0 , -1);
+                        List<String> messages = jedis.lrange(user2 + user1 , 0 , -1);
                         JavaTimeModule javaTimeModule = new JavaTimeModule();
                         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                        dateTimeFormatter.withZone(TimeZone.getTimeZone("Asia/Shanghai").toZoneId());
                         javaTimeModule.addSerializer(LocalDateTime.class , new LocalDateTimeSerializer(dateTimeFormatter));
                         mapper.registerModule(javaTimeModule);
                         for (String message : messages)
