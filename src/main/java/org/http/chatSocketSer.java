@@ -20,12 +20,12 @@ public class chatSocketSer implements Runnable
             {
                 userSocket = serverSocket.accept();
                 System.out.println("New connection established with " + userSocket.getRemoteSocketAddress());
-                new Thread(new chatSocketThread(userSocket)).start();
+                new Thread(new chatReceiveSocketThread(userSocket)).start();
             }
         }
         catch (IOException e)
         {
-            throw new RuntimeException(e);
+            System.out.println("Server socket exceptio");
         }
     }
 

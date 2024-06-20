@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import static org.http.chatSocketSer.userSocketList;
+
 @WebServlet("/logoInResp")
 public class logoInResp extends HttpServlet
 {
@@ -34,7 +36,7 @@ public class logoInResp extends HttpServlet
         // 验证用户信息
         userFind Find = new userFind();
         // 验证成功
-        if(Find.userIsExist(userName , password))
+        if(Find.userIsExist(userName , password) && userSocketList.get(userName) == null)
         {
             // 设置cookie
             Map<String, Object> userMap = Find.getUserInfo(userName);
@@ -49,6 +51,7 @@ public class logoInResp extends HttpServlet
             }
             // 响应成功
             resp.setStatus(HttpServletResponse.SC_OK);
+            new Thread(new chatSocketSer()).start();
         }
     }
 }
