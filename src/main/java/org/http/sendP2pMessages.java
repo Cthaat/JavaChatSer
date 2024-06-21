@@ -36,6 +36,7 @@ public class sendP2pMessages extends HttpServlet
                 {
                     String username = cookie.getValue();
                     p2pRoomChat p2p = new p2pRoomChat();
+                    // 发送消息
                     if (p2p.getSendMessage(username, friendUserName, message))
                     {
                         resp.getWriter().println("success");
