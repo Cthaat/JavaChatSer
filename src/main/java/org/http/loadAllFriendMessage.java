@@ -13,21 +13,52 @@ import java.io.IOException;
 
 import static org.http.logoInResp.MAPPER;
 
+
+/**
+ * @Auther: Edge
+ * @Date: 2024/6/22 13:55
+ * @Description: TODO
+ * @version: 1.0
+ **/
+
+
 @WebServlet ("/loadAllFriendMessage")
 public class loadAllFriendMessage extends HttpServlet
 {
     @Override
     protected void doGet(HttpServletRequest req , HttpServletResponse resp) throws ServletException, IOException
     {
+
+        /**
+         * @description: doGet方法
+         * @param:
+         * @param req
+         * @param resp
+         * @return: void
+         * @author Edge
+         * @date: 2024/6/22 13:55
+         **/
+
         this.doPost(req , resp);
     }
 
     @Override
     protected void doPost(HttpServletRequest req , HttpServletResponse resp) throws ServletException, IOException
     {
+
+        /**
+         * @description: doPost方法
+         * @param:
+         * @param req
+         * @param resp
+         * @return: void
+         * @author Edge
+         * @date: 2024/6/22 13:55
+         **/
+
         // 获取请求中的Cookie列表
         Cookie[] cookies = req.getCookies();
-        if (cookies!= null)
+        if (cookies != null)
         {
             userFind userFind = new userFind();
             for (Cookie cookie : cookies)

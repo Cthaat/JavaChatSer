@@ -15,19 +15,49 @@ import java.util.Map;
 
 import static org.http.logoInResp.MAPPER;
 
+
+/**
+ * @Auther: Edge
+ * @Date: 2024/6/22 13:54
+ * @Description: TODO
+ * @version: 1.0
+ **/
+
+
 @WebServlet ("/getp2pMessages")
 public class getp2pMessages extends HttpServlet
 {
-
     @Override
     protected void doGet(HttpServletRequest req , HttpServletResponse resp) throws ServletException, IOException
     {
+
+        /**
+         * @description: doGet方法
+         * @param:
+         * @param req
+         * @param resp
+         * @return: void
+         * @author Edge
+         * @date: 2024/6/22 13:54
+         **/
+
         this.doPost(req , resp);
     }
 
     @Override
     protected void doPost(HttpServletRequest req , HttpServletResponse resp) throws ServletException, IOException
     {
+
+        /**
+         * @description: doPost方法
+         * @param:
+         * @param req
+         * @param resp
+         * @return: void
+         * @author Edge
+         * @date: 2024/6/22 13:54
+         **/
+
         String friendName = req.getHeader("friendName");
         if (friendName != null)
         // 获取请求中的Cookie列表
@@ -41,7 +71,7 @@ public class getp2pMessages extends HttpServlet
                     if (cookie.getName().equals("username"))
                     {
                         String userName = cookie.getValue();
-                        List<Map<String, Object>> messages = p2p.getMessages(userName, friendName);
+                        List<Map<String, Object>> messages = p2p.getMessages(userName , friendName);
                         String json = MAPPER.writeValueAsString(messages);
                         resp.getWriter().write(json);
                     }

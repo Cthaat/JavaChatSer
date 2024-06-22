@@ -16,11 +16,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+
+/**
+ * @Auther: Edge
+ * @Date: 2024/6/22 14:00
+ * @Description: TODO
+ * @version: 1.0
+ **/
+
+
 public class publicRoomfind
 {
     // 将公共聊天室中的数据存入redis
     public void loadPublicRoomToRedis()
     {
+
+        /**
+         * @description: 从mysql中查询公共聊天室数据，并存入redis中
+         * @param:
+         * @return: void
+         * @author Edge
+         * @date: 2024/6/22 14:00
+         **/
+
         // 创建mapper对象，用于转换json格式
         ObjectMapper mapper = new ObjectMapper();
         // 读取redis.properties配置文件
@@ -49,7 +67,7 @@ public class publicRoomfind
                 // 查询数据SQL语句
                 String sql = "select * from public_chat_room limit ? offset ?";
                 // 查询总数
-                int totalCount = jdbcTemplate.queryForObject(sqlCount, Integer.class);
+                int totalCount = jdbcTemplate.queryForObject(sqlCount , Integer.class);
                 // mysql分页查询，每页十个
                 int pageSize = 10;
                 // 计算总页数
@@ -59,10 +77,10 @@ public class publicRoomfind
                 // 清空redis
                 jedis.del("text");
                 // 遍历每页数据
-                for (int currentPage = 1; currentPage <= totalPages; currentPage++)
+                for (int currentPage = 1 ; currentPage <= totalPages ; currentPage++)
                 {
                     // 查询数据
-                    List<Map<String, Object>> result = jdbcTemplate.queryForList(sql, pageSize, (currentPage - 1) * pageSize);
+                    List<Map<String, Object>> result = jdbcTemplate.queryForList(sql , pageSize , (currentPage - 1) * pageSize);
                     // 遍历每条数据，转换为json格式，存入redis
                     for (Map<String, Object> row : result)
                     {
@@ -70,7 +88,7 @@ public class publicRoomfind
                         JavaTimeModule javaTimeModule = new JavaTimeModule();
                         // 时间格式化
                         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                        javaTimeModule.addSerializer(LocalDateTime.class,new LocalDateTimeSerializer(dateTimeFormatter));
+                        javaTimeModule.addSerializer(LocalDateTime.class , new LocalDateTimeSerializer(dateTimeFormatter));
                         mapper.registerModule(javaTimeModule);
                         String value = mapper.writeValueAsString(row);
                         // 存入redis

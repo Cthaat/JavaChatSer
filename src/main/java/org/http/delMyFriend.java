@@ -12,18 +12,50 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
 
+
+/**
+ * @Auther: Edge
+ * @Date: 2024/6/22 13:54
+ * @Description: TODO
+ * @version: 1.0
+ **/
+
+
 @WebServlet ("/delMyFriend")
 public class delMyFriend extends HttpServlet
 {
     @Override
     protected void doGet(HttpServletRequest req , HttpServletResponse resp) throws ServletException, IOException
     {
+
+        /**
+         * @description: doGet方法
+         * @param:
+         * @param req
+         * @param resp
+         * @return: void
+         * @author Edge
+         * @date: 2024/6/22 13:54
+         **/
+
         this.doPost(req , resp);
     }
 
+    // 根据username删除好友
     @Override
     protected void doPost(HttpServletRequest req , HttpServletResponse resp) throws ServletException, IOException
     {
+
+        /**
+         * @description: doPost方法
+         * @param:
+         * @param req
+         * @param resp
+         * @return: void
+         * @author Edge
+         * @date: 2024/6/22 13:54
+         **/
+
         // 获取请求头
         String delFriendUserName = req.getHeader("friendName");
         if (delFriendUserName == null)
@@ -32,7 +64,7 @@ public class delMyFriend extends HttpServlet
             return;
         }
         Cookie[] cookies = req.getCookies();
-        if (cookies!= null)
+        if (cookies != null)
         {
             for (Cookie cookie : cookies)
             {
@@ -42,7 +74,7 @@ public class delMyFriend extends HttpServlet
                     delFriend del = new delFriend();
                     try
                     {
-                        boolean flag = del.delFriendByUsername(username, delFriendUserName);
+                        boolean flag = del.delFriendByUsername(username , delFriendUserName);
                         if (flag)
                         {
                             resp.getWriter().println("success");

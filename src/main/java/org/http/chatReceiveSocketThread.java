@@ -12,18 +12,46 @@ import java.util.Map;
 
 import static org.http.chatSocketSer.userSocketList;
 
+
+/**
+ * @Auther: Edge
+ * @Date: 2024/6/22 13:53
+ * @Description: TODO
+ * @version: 1.0
+ **/
+
+
 public class chatReceiveSocketThread extends Thread
 {
     private final Socket socket;
 
     public chatReceiveSocketThread(Socket socket)
     {
+
+        /**
+         * @description: 构造方法
+         * @param:
+         * @param socket 客户端socket
+         * @return:
+         * @author Edge
+         * @date: 2024/6/22 13:53
+         **/
+
         this.socket = socket;
     }
 
     @Override
     public void run()
     {
+
+        /**
+         * @description: 线程运行方法
+         * @param:
+         * @return: void
+         * @author Edge
+         * @date: 2024/6/22 13:53
+         **/
+
         // 打印日志
         System.out.println("New chat receive socket thread started");
         // 声明一个用户名变量
@@ -32,10 +60,10 @@ public class chatReceiveSocketThread extends Thread
         try (InputStream inputStream = socket.getInputStream() ;
              DataInputStream dataInputStream = new DataInputStream(inputStream) ;)
         {
-        // 等待用户名
+            // 等待用户名
             System.out.println("Waiting for user name");
             userName = dataInputStream.readUTF();
-        // 使用synchronized关键字，保证用户名的线程安全
+            // 使用synchronized关键字，保证用户名的线程安全
             synchronized (userName)
             {
                 // 打印用户连接日志

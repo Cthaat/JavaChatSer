@@ -15,11 +15,31 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 
+
+/**
+ * @Auther: Edge
+ * @Date: 2024/6/22 13:58
+ * @Description: TODO
+ * @version: 1.0
+ **/
+
+
 public class delFriend implements delFriendSQL
 {
     @Override
     public boolean delFriendByUsername(String username , String friendname) throws SQLException
     {
+
+        /**
+         * @description: 删除用户
+         * @param:
+         * @param username
+         * @param friendname
+         * @return: boolean
+         * @author Edge
+         * @date: 2024/6/22 13:58
+         **/
+
         TransactionSynchronizationManager.initSynchronization();
         JdbcTemplate jdbcTemplate = new JdbcTemplate(SQLUtils.getDataSource());
         DataSource dataSource = jdbcTemplate.getDataSource();
@@ -75,8 +95,7 @@ public class delFriend implements delFriendSQL
         {
             connection.rollback();
             return false;
-        }
-        finally
+        } finally
         {
             connection.setAutoCommit(true);
             connection.close();

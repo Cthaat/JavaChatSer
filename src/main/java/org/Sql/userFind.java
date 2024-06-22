@@ -11,11 +11,31 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
+
+/**
+ * @Auther: Edge
+ * @Date: 2024/6/22 14:01
+ * @Description: TODO
+ * @version: 1.0
+ **/
+
+
 public class userFind
 {
     // 通过账户密码判断用户是否存在
     public boolean userIsExist(String username , String password)
     {
+
+        /**
+         * @description: 判断用户是否存在
+         * @param:
+         * @param username
+         * @param password
+         * @return: boolean
+         * @author Edge
+         * @date: 2024/6/22 14:01
+         **/
+
         // 是否存在的标志
         boolean userExists = false;
         try
@@ -61,6 +81,16 @@ public class userFind
     // 通过用户名获取用户信息
     public Map<String, Object> getUserInfo(String username)
     {
+
+        /**
+         * @description: 通过用户名获取用户信息
+         * @param:
+         * @param username
+         * @return: java.util.Map<java.lang.String , java.lang.Object>
+         * @author Edge
+         * @date: 2024/6/22 14:01
+         **/
+
         try
         {
             //创建JdbcTemplate对象，用于操作数据库
@@ -79,6 +109,16 @@ public class userFind
 
     public List<Map<String, Object>> getFriendList(String username)
     {
+
+        /**
+         * @description: 获取用户列表
+         * @param:
+         * @param username
+         * @return: java.util.List<java.util.Map < java.lang.String , java.lang.Object>>
+         * @author Edge
+         * @date: 2024/6/22 14:01
+         **/
+
         // 创建mapper对象，用于转换json格式
         ObjectMapper mapper = new ObjectMapper();
         // 读取redis.properties配置文件

@@ -14,11 +14,31 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+
+/**
+ * @Auther: Edge
+ * @Date: 2024/6/22 13:58
+ * @Description: TODO
+ * @version: 1.0
+ **/
+
+
 public class p2pRoomChat
 {
     // 加载两个人对话的redis缓存
     public void loadMessagesFromTwoUsers(String user1 , String user2)
     {
+
+        /**
+         * @description: 加载对话
+         * @param:
+         * @param user1
+         * @param user2
+         * @return: void
+         * @author Edge
+         * @date: 2024/6/22 13:58
+         **/
+
         // 创建mapper对象，用于转换json格式
         ObjectMapper mapper = new ObjectMapper();
         // 读取redis.properties配置文件
@@ -87,6 +107,17 @@ public class p2pRoomChat
 
     public List<Map<String, Object>> getMessages(String user1 , String user2)
     {
+
+        /**
+         * @description: 获取对话
+         * @param:
+         * @param user1
+         * @param user2
+         * @return: java.util.List<java.util.Map < java.lang.String , java.lang.Object>>
+         * @author Edge
+         * @date: 2024/6/22 13:59
+         **/
+
         // 创建mapper对象，用于转换json格式
         ObjectMapper mapper = new ObjectMapper();
         // 读取redis.properties配置文件
@@ -164,21 +195,40 @@ public class p2pRoomChat
 
     public boolean getSendMessage(String sendUser , String getUser , String message)
     {
+
+        /**
+         * @description: 发送消息
+         * @param:
+         * @param sendUser
+         * @param getUser
+         * @param message
+         * @return: boolean
+         * @author Edge
+         * @date: 2024/6/22 13:59
+         **/
+
+        // 尝试执行代码
         try
         {
+            // 创建JdbcTemplate对象，用于操作数据库
             JdbcTemplate jdbcTemplate = new JdbcTemplate(SQLUtils.getDataSource());
+            // 定义SQL语句，插入数据
             String sql = "insert into p2p_text (send_user_name , recive_user_name , text) values ( ? , ? , ? )";
+            // 执行插入操作，返回受影响的行数
             int result = jdbcTemplate.update(sql , sendUser , getUser , message);
+            // 如果受影响的行数为1，则加载消息，并返回true
             if (result == 1)
             {
                 this.loadMessagesFromTwoUsers(sendUser , getUser);
                 return true;
             }
+            // 否则，返回false
             else
             {
                 return false;
             }
         }
+        // 发生异常，返回false
         catch (Exception e)
         {
             return false;
