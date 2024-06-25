@@ -170,7 +170,7 @@ public class userFind
                         jedis.rpush(username , json);
                     }
                     // 设置过期时间
-                    jedis.expire(username , 60 * 60 * 24);
+                    jedis.expire(username , 60);
                     // 关闭redis连接
                     jedis.close();
                     return friendList;
