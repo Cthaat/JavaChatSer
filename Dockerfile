@@ -47,6 +47,7 @@ RUN chmod +x /start.sh
 
 # 使用 start.sh 启动服务
 CMD ["/start.sh"]
+CMD ["service redis-server start"]
 
 # 使用 Tomcat 默认的 ENTRYPOINT 启动服务
 CMD ["catalina.sh", "run"]
