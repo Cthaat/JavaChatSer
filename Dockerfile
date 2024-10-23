@@ -32,6 +32,9 @@ RUN apt-get update && apt-get install -y \
 COPY ./my.cnf /etc/mysql/my.cnf
 COPY ./redis.conf /etc/redis/redis.conf
 
+# 创建 MySQL 用户的家目录
+RUN mkdir -p /var/lib/mysql && chown -R mysql:mysql /var/lib/mysql
+
 # 复制 SQL 文件
 COPY --from=builder /app/src/main/resources/javaChat.sql /docker-entrypoint-initdb.d/
 
