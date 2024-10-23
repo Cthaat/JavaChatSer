@@ -20,9 +20,10 @@ RUN mvn clean package
 FROM tomcat:9.0
 
 # 将构建的 WAR 文件复制到 Tomcat 的 webapps 目录
-COPY --from=builder /app/target/JavaChat.war /usr/local/tomcat/webapps/
+COPY --from=builder /app/target/JavaChatSer-1.0-SNAPSHOT.war /usr/local/tomcat/webapps/JavaChat.war
 
 # 暴露 Tomcat 的默认端口
 EXPOSE 8080
 
-# 使用 Tomcat 默认的 ENTRYPOINT 启
+# 使用 Tomcat 默认的 ENTRYPOINT 启动服务
+CMD ["catalina.sh", "run"]
