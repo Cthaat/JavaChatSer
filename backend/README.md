@@ -1,6 +1,6 @@
 # JavaChatSer Backend
 
-这里用于承载新版 Spring Boot 后端代码。当前已完成阶段 1 和阶段 2：Spring Boot 基础骨架、数据库迁移脚本、JPA 实体模型和 Repository。
+这里用于承载新版 Spring Boot 后端代码。当前已完成阶段 1 到阶段 3：Spring Boot 基础骨架、数据库迁移脚本、JPA 实体模型、Repository 和 JWT 认证模块。
 
 ## 目标技术栈
 
@@ -33,6 +33,10 @@
 - Flyway 初始化 `chat_user`、`friend_relation`、`private_message`、`public_message`。
 - JPA Repository 已覆盖用户、好友关系、私聊消息和公共消息。
 - 初始化账号：`admin / 123456`、`testUser3 / 123456`，数据库内保存 BCrypt 哈希。
+- `POST /api/auth/register` 支持注册并返回 JWT。
+- `POST /api/auth/login` 支持用户名密码登录并返回 JWT。
+- `GET /api/auth/me` 支持通过 `Authorization: Bearer <token>` 获取当前用户。
+- `POST /api/auth/logout` 预留退出接口，前端清除 Token 即可完成退出。
 
 ## 数据库迁移
 
@@ -61,4 +65,22 @@ mvn spring-boot:run
 
 ```powershell
 docker run --rm -v "${PWD}:/workspace" -v "$HOME/.m2:/root/.m2" -w /workspace/backend maven:3.9-eclipse-temurin-21 mvn test
+```
+
+## 认证接口示例
+
+登录：
+
+```powershell
+Invoke-RestMethod -Uri http://localhost:8080/api/auth/login `
+  -Method Post `
+  -ContentType 'application/json' `
+  -Body '{"username":"admin","password":"123456"}'
+```
+
+当前用户：
+
+```powershell
+Invoke-RestMethod -Uri http://localhost:8080/api/auth/me `
+  -Headers @{ Authorization = "Bearer <token>" }
 ```
