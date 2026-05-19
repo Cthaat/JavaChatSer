@@ -1,6 +1,6 @@
 # JavaChatSer Backend
 
-这里用于承载新版 Spring Boot 后端代码。当前已完成阶段 1 到阶段 5：Spring Boot 基础骨架、数据库迁移脚本、JPA 实体模型、Repository、JWT 认证模块、好友模块和私聊 REST 模块。
+这里用于承载新版 Spring Boot 后端代码。当前已完成阶段 1 到阶段 6：Spring Boot 基础骨架、数据库迁移脚本、JPA 实体模型、Repository、JWT 认证模块、好友模块、私聊 REST 模块和 WebSocket 实时通信。
 
 ## 目标技术栈
 
@@ -50,6 +50,11 @@
 - `POST /api/chats/private/{friendId}/read` 支持将某好友发来的未读消息标记已读。
 - 私聊发送后写入 MySQL，并更新 Redis `chat:private:{minUserId}:{maxUserId}` 最近消息缓存。
 - 未读数使用 Redis `unread:{userId}:{friendId}` 缓存，Redis 不可用时回退数据库统计。
+- `/ws/chat?token=<JWT>` 支持 WebSocket 连接，握手阶段校验 JWT。
+- 用户连接后会写入 Redis `online:user:{userId}` 在线状态，并向已接受好友推送上下线通知。
+- WebSocket `PRIVATE_MESSAGE` 会复用私聊服务，先写 MySQL、更新 Redis，再推送给发送者和接收者的在线连接。
+- WebSocket `PUBLIC_MESSAGE` 会写入 `public_message` 并缓存到 Redis `chat:public:recent`，随后广播给所有在线连接。
+- WebSocket `PING` 会返回 `PONG`，心跳消息会刷新在线状态 TTL。
 
 ## 数据库迁移
 
@@ -150,3 +155,40 @@ Invoke-RestMethod -Uri http://localhost:8080/api/chats/private/2/read `
   -Method Post `
   -Headers @{ Authorization = "Bearer <token>" }
 ```
+
+## WebSocket 消息示例
+
+连接地址：
+
+```text
+ws://localhost:8080/ws/chat?token=<JWT>
+```
+
+发送私聊：
+
+```json
+{
+  "type": "PRIVATE_MESSAGE",
+  "receiverId": 2,
+  "content": "你好"
+}
+```
+
+发送公共消息：
+
+```json
+{
+  "type": "PUBLIC_MESSAGE",
+  "content": "大家好"
+}
+```
+
+心跳：
+
+```json
+{
+  "type": "PING"
+}
+```
+
+服务端推送统一使用 `type + data` 结构，当前类型包括 `PRIVATE_MESSAGE`、`PUBLIC_MESSAGE`、`FRIEND_STATUS`、`ONLINE_USERS`、`PONG` 和 `ERROR`。

@@ -2,6 +2,7 @@ package com.example.javachat.chat;
 
 import com.example.javachat.chat.dto.PrivateMessageResponse;
 import com.example.javachat.chat.dto.PrivateMessageSendRequest;
+import com.example.javachat.chat.dto.PublicMessageResponse;
 import com.example.javachat.chat.dto.ReadReceiptResponse;
 import com.example.javachat.common.BusinessException;
 import com.example.javachat.common.ErrorCode;
@@ -18,20 +19,26 @@ import org.springframework.transaction.annotation.Transactional;
 public class ChatService {
 
     private final PrivateMessageRepository privateMessageRepository;
+    private final PublicMessageRepository publicMessageRepository;
     private final FriendRepository friendRepository;
     private final UserRepository userRepository;
     private final PrivateChatCacheService privateChatCacheService;
+    private final PublicChatCacheService publicChatCacheService;
 
     public ChatService(
             PrivateMessageRepository privateMessageRepository,
+            PublicMessageRepository publicMessageRepository,
             FriendRepository friendRepository,
             UserRepository userRepository,
-            PrivateChatCacheService privateChatCacheService
+            PrivateChatCacheService privateChatCacheService,
+            PublicChatCacheService publicChatCacheService
     ) {
         this.privateMessageRepository = privateMessageRepository;
+        this.publicMessageRepository = publicMessageRepository;
         this.friendRepository = friendRepository;
         this.userRepository = userRepository;
         this.privateChatCacheService = privateChatCacheService;
+        this.publicChatCacheService = publicChatCacheService;
     }
 
     @Transactional(readOnly = true)
@@ -65,6 +72,20 @@ public class ChatService {
         int readCount = privateMessageRepository.markMessagesAsRead(userId, friendId, LocalDateTime.now());
         privateChatCacheService.clearUnreadCount(userId, friendId);
         return new ReadReceiptResponse(readCount, 0);
+    }
+
+    @Transactional
+    public PublicMessageResponse sendPublicMessage(Long senderId, String content) {
+        if (content == null || content.isBlank()) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "消息内容不能为空");
+        }
+        if (userRepository.findByIdAndEnabledTrue(senderId).isEmpty()) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+        PublicMessage savedMessage = publicMessageRepository.saveAndFlush(new PublicMessage(senderId, content.trim()));
+        PublicMessageResponse response = PublicMessageResponse.from(savedMessage);
+        publicChatCacheService.cacheRecentMessage(response);
+        return response;
     }
 
     private void ensurePrivateChatAllowed(Long userId, Long friendId) {
