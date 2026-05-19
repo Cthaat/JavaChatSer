@@ -5,7 +5,7 @@ JavaChatSer 正在从传统 Java Web 聊天项目升级为 Spring Boot + Vue 前
 ## 当前状态
 
 - 旧版代码仍保留在 `src/`、`pom.xml`、`Dockerfile`、`start.sh` 中，用作业务参考。
-- 新版后端将在 `backend/` 中实现，目标是 Spring Boot 3 + Java 21。
+- 新版后端已在 `backend/` 中建立 Spring Boot 3 + Java 21 骨架。
 - 新版前端将在 `frontend/` 中实现，目标是 Vite + Vue 3。
 - 根目录 `docker-compose.yml` 已预留 MySQL、Redis、backend、frontend 服务规划。
 
@@ -36,9 +36,9 @@ JavaChatSer/
 
 开发必须按文档中的阶段逐步完成：
 
-1. 阶段 0：建立新版目录和部署规划，保留旧代码。
-2. 阶段 1：创建 Spring Boot 后端骨架。
-3. 阶段 2：数据库迁移和实体建模。
+1. 阶段 0：建立新版目录和部署规划，保留旧代码。已完成。
+2. 阶段 1：创建 Spring Boot 后端骨架。已完成。
+3. 阶段 2：数据库迁移和实体建模。已完成。
 4. 阶段 3：JWT 认证模块。
 5. 阶段 4：好友模块。
 6. 阶段 5：私聊历史和发送接口。
@@ -79,4 +79,4 @@ docker compose up -d --build
 
 ## 下一步
 
-下一阶段应在 `backend/` 中创建 Spring Boot Maven 项目，完成主应用、基础配置、统一响应、全局异常处理和 `GET /api/health` 健康检查接口。
+下一阶段应实现认证模块，包括注册、登录、JWT 生成和解析、Spring Security 认证过滤器以及 `GET /api/auth/me`。

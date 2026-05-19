@@ -1,6 +1,6 @@
 # JavaChatSer Backend
 
-这里用于承载新版 Spring Boot 后端代码。当前处于阶段 0，仅建立目录并保留迁移说明；阶段 1 开始创建完整 Maven 工程。
+这里用于承载新版 Spring Boot 后端代码。当前已完成阶段 1 和阶段 2：Spring Boot 基础骨架、数据库迁移脚本、JPA 实体模型和 Repository。
 
 ## 目标技术栈
 
@@ -24,8 +24,41 @@
 - `chat/`：私聊、公共聊天室、消息持久化。
 - `websocket/`：实时推送、在线状态、Session 管理。
 
-## 阶段 1 验收目标
+## 已完成能力
 
 - 后端应用可以启动。
 - `GET /api/health` 返回统一成功响应。
-- 配置错误对前端返回可读信息，不暴露原始堆栈。
+- 基础安全配置允许健康检查和 Swagger，其他接口默认需要认证。
+- 全局异常处理会返回统一 `ApiResponse`，不向前端暴露原始堆栈。
+- Flyway 初始化 `chat_user`、`friend_relation`、`private_message`、`public_message`。
+- JPA Repository 已覆盖用户、好友关系、私聊消息和公共消息。
+- 初始化账号：`admin / 123456`、`testUser3 / 123456`，数据库内保存 BCrypt 哈希。
+
+## 数据库迁移
+
+迁移脚本位于：
+
+```text
+src/main/resources/db/migration/V1__init_chat_schema.sql
+```
+
+默认启动后端时会自动执行 Flyway 迁移。若本机 `3306` 已被占用，可以临时指定 Compose 暴露端口：
+
+```powershell
+$env:MYSQL_PORT='13306'
+docker compose up -d mysql
+```
+
+## 验证命令
+
+```powershell
+cd backend
+mvn test
+mvn spring-boot:run
+```
+
+当前本机如果没有安装 Maven，也可以用 Maven Docker 镜像验证：
+
+```powershell
+docker run --rm -v "${PWD}:/workspace" -v "$HOME/.m2:/root/.m2" -w /workspace/backend maven:3.9-eclipse-temurin-21 mvn test
+```
