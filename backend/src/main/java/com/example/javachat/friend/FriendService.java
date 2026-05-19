@@ -1,6 +1,7 @@
 package com.example.javachat.friend;
 
 import com.example.javachat.chat.PrivateMessageRepository;
+import com.example.javachat.chat.PrivateChatCacheService;
 import com.example.javachat.common.BusinessException;
 import com.example.javachat.common.ErrorCode;
 import com.example.javachat.friend.dto.FriendRequestCreateRequest;
@@ -23,17 +24,20 @@ public class FriendService {
     private final FriendRepository friendRepository;
     private final UserRepository userRepository;
     private final PrivateMessageRepository privateMessageRepository;
+    private final PrivateChatCacheService privateChatCacheService;
     private final FriendCacheService friendCacheService;
 
     public FriendService(
             FriendRepository friendRepository,
             UserRepository userRepository,
             PrivateMessageRepository privateMessageRepository,
+            PrivateChatCacheService privateChatCacheService,
             FriendCacheService friendCacheService
     ) {
         this.friendRepository = friendRepository;
         this.userRepository = userRepository;
         this.privateMessageRepository = privateMessageRepository;
+        this.privateChatCacheService = privateChatCacheService;
         this.friendCacheService = friendCacheService;
     }
 
@@ -56,7 +60,14 @@ public class FriendService {
                 .map(friend -> new FriendResponse(
                         friend,
                         friendCacheService.isOnline(friend.id()),
-                        privateMessageRepository.countByReceiverIdAndSenderIdAndReadAtIsNull(userId, friend.id())
+                        privateChatCacheService.getUnreadCount(
+                                userId,
+                                friend.id(),
+                                () -> privateMessageRepository.countByReceiverIdAndSenderIdAndReadAtIsNull(
+                                        userId,
+                                        friend.id()
+                                )
+                        )
                 ))
                 .toList();
     }

@@ -15,7 +15,7 @@ public interface PrivateMessageRepository extends JpaRepository<PrivateMessage, 
             from PrivateMessage message
             where (message.senderId = :userId and message.receiverId = :friendId)
                or (message.senderId = :friendId and message.receiverId = :userId)
-            order by message.createdAt asc
+            order by message.createdAt asc, message.id asc
             """)
     Page<PrivateMessage> findConversation(
             @Param("userId") Long userId,

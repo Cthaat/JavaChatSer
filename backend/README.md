@@ -1,6 +1,6 @@
 # JavaChatSer Backend
 
-这里用于承载新版 Spring Boot 后端代码。当前已完成阶段 1 到阶段 4：Spring Boot 基础骨架、数据库迁移脚本、JPA 实体模型、Repository、JWT 认证模块和好友模块。
+这里用于承载新版 Spring Boot 后端代码。当前已完成阶段 1 到阶段 5：Spring Boot 基础骨架、数据库迁移脚本、JPA 实体模型、Repository、JWT 认证模块、好友模块和私聊 REST 模块。
 
 ## 目标技术栈
 
@@ -45,6 +45,11 @@
 - `GET /api/friends` 支持好友列表、在线状态和未读消息数。
 - `DELETE /api/friends/{friendId}` 支持双向删除好友。
 - 好友基础资料会缓存到 Redis `friend:list:{userId}`，在线状态和未读数每次实时计算。
+- `GET /api/chats/private/{friendId}/messages` 支持私聊历史分页，按时间升序返回。
+- `POST /api/chats/private/{friendId}/messages` 支持好友之间发送文本私聊，非好友返回 `40300`。
+- `POST /api/chats/private/{friendId}/read` 支持将某好友发来的未读消息标记已读。
+- 私聊发送后写入 MySQL，并更新 Redis `chat:private:{minUserId}:{maxUserId}` 最近消息缓存。
+- 未读数使用 Redis `unread:{userId}:{friendId}` 缓存，Redis 不可用时回退数据库统计。
 
 ## 数据库迁移
 
@@ -116,5 +121,32 @@ Invoke-RestMethod -Uri http://localhost:8080/api/friends/requests `
 
 ```powershell
 Invoke-RestMethod -Uri http://localhost:8080/api/friends `
+  -Headers @{ Authorization = "Bearer <token>" }
+```
+
+## 私聊接口示例
+
+发送私聊：
+
+```powershell
+Invoke-RestMethod -Uri http://localhost:8080/api/chats/private/2/messages `
+  -Method Post `
+  -ContentType 'application/json' `
+  -Headers @{ Authorization = "Bearer <token>" } `
+  -Body '{"content":"你好"}'
+```
+
+查看历史：
+
+```powershell
+Invoke-RestMethod -Uri 'http://localhost:8080/api/chats/private/2/messages?page=0&size=20' `
+  -Headers @{ Authorization = "Bearer <token>" }
+```
+
+标记已读：
+
+```powershell
+Invoke-RestMethod -Uri http://localhost:8080/api/chats/private/2/read `
+  -Method Post `
   -Headers @{ Authorization = "Bearer <token>" }
 ```
