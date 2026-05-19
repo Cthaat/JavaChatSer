@@ -11,8 +11,6 @@ services:
       MYSQL_USER: ${MYSQL_USER:-javachat}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-javachat_password}
       TZ: Asia/Shanghai
-    ports:
-      - "${MYSQL_PORT:-3306}:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     command:
@@ -28,8 +26,6 @@ services:
     image: redis:7-alpine
     container_name: javachatser-redis
     restart: unless-stopped
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis-data:/data
     command: ["redis-server", "--appendonly", "yes"]
@@ -40,7 +36,6 @@ services:
       retries: 10
 
   backend:
-    profiles: ["app"]
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -57,6 +52,11 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change-this-secret-before-production}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
     depends_on:
       mysql:
         condition: service_healthy
@@ -64,19 +64,19 @@ services:
         condition: service_healthy
 
   frontend:
-    profiles: ["app"]
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
+        VITE_WS_BASE_URL: ${VITE_WS_BASE_URL:-}
     container_name: javachatser-frontend
     restart: unless-stopped
-    environment:
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
-      VITE_WS_BASE_URL: ${VITE_WS_BASE_URL:-ws://localhost:8080}
     ports:
       - "${FRONTEND_PORT:-5173}:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
   mysql-data:

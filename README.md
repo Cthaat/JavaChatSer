@@ -1,13 +1,13 @@
 # JavaChatSer
 
-JavaChatSer 正在从传统 Java Web 聊天项目升级为 Spring Boot + Vue 前后端分离聊天系统。当前仓库同时保留旧版实现和新版迁移目录，后续开发按 `docs/SPRING_BOOT_VUE_UPGRADE_GUIDE.md` 的阶段顺序推进。
+JavaChatSer 是一个从传统 Java Web 聊天项目升级而来的 Spring Boot + Vue 前后端分离聊天系统。当前仓库同时保留旧版实现和新版工程，便于对比原始业务和现代化重构结果。
 
 ## 当前状态
 
 - 旧版代码仍保留在 `src/`、`pom.xml`、`Dockerfile`、`start.sh` 中，用作业务参考。
 - 新版后端已在 `backend/` 中完成 Spring Boot 3 + Java 21 骨架、认证、好友、私聊 REST、WebSocket 实时通信和公共聊天室接口。
 - 新版前端已在 `frontend/` 中建立 Vite + Vue 3 工程，并接入后端认证、好友、聊天和 WebSocket。
-- 根目录 `docker-compose.yml` 已预留 MySQL、Redis、backend、frontend 服务规划。
+- 根目录 `docker-compose.yml` 已完成 MySQL、Redis、backend、frontend 一键部署。
 
 ## 旧版业务参考
 
@@ -24,11 +24,15 @@ JavaChatSer 正在从传统 Java Web 聊天项目升级为 Spring Boot + Vue 前
 
 ```text
 JavaChatSer/
-  backend/                 # Spring Boot 后端，后续阶段实现
-  frontend/                # Vue 3 前端，后续阶段实现
+  backend/                 # Spring Boot 后端
+  frontend/                # Vue 3 前端，Nginx 托管
   docs/
+    API.md
+    DATABASE.md
+    DEFENSE_GUIDE.md
     SPRING_BOOT_VUE_UPGRADE_GUIDE.md
-  docker-compose.yml       # MySQL、Redis、backend、frontend 服务规划
+    screenshots/           # 功能截图建议放置位置
+  docker-compose.yml       # MySQL、Redis、backend、frontend 一键部署
   src/                     # 旧版 Java Web 项目，保留作参考
 ```
 
@@ -45,28 +49,56 @@ JavaChatSer/
 7. 阶段 6：WebSocket 实时通信。已完成。
 8. 阶段 7：公共聊天室。已完成。
 9. 阶段 8：Vue 前端。已完成。
-10. 阶段 9：Docker 部署和答辩文档。
+10. 阶段 9：Docker 部署和答辩文档。已完成。
 
-## Compose 规划
+## 快速开始
 
-当前 `docker-compose.yml` 已包含四类服务：
+环境要求：
 
-- `mysql`：MySQL 8，持久化数据库。
-- `redis`：Redis 7，缓存好友列表、消息和在线状态。
-- `backend`：后续 Spring Boot 服务，默认端口 `8080`。
-- `frontend`：后续 Vue/Nginx 服务，默认端口 `5173`。
+- Docker Desktop 或 Docker Engine + Docker Compose v2。
+- 本机端口 `5173`、`8080` 未被占用，或通过 `.env` 改端口。
 
-阶段 0 只验证 Compose 配置结构：
-
-```powershell
-docker compose config
-```
-
-后续阶段补齐 `backend/Dockerfile`、`frontend/Dockerfile` 后，再使用：
+一键启动：
 
 ```powershell
 docker compose up -d --build
 ```
+
+访问地址：
+
+| 地址 | 说明 |
+| --- | --- |
+| `http://localhost:5173` | 前端页面 |
+| `http://localhost:8080/api/health` | 后端健康检查 |
+| `http://localhost:8080/swagger-ui.html` | Swagger UI |
+
+默认账号：
+
+| 用户名 | 密码 |
+| --- | --- |
+| `admin` | `123456` |
+| `testUser3` | `123456` |
+
+停止服务：
+
+```powershell
+docker compose down
+```
+
+如需重置数据库和 Redis 数据：
+
+```powershell
+docker compose down -v
+```
+
+## Compose 服务
+
+`docker-compose.yml` 包含四类服务：
+
+- `mysql`：MySQL 8，持久化数据库。
+- `redis`：Redis 7，缓存好友列表、消息和在线状态。
+- `backend`：Spring Boot 服务，默认端口 `8080`。
+- `frontend`：Vue 静态资源 + Nginx 反向代理，默认端口 `5173`。
 
 ## 默认端口
 
@@ -74,8 +106,10 @@ docker compose up -d --build
 | --- | --- | --- |
 | backend | 8080 | 8080 |
 | frontend | 80 | 5173 |
-| mysql | 3306 | 3306 |
-| redis | 6379 | 6379 |
+| mysql | 3306 | 仅 Compose 内部网络 |
+| redis | 6379 | 仅 Compose 内部网络 |
+
+可复制 `.env.example` 为 `.env` 修改端口、数据库账号或 JWT 密钥。
 
 ## 前端本地运行
 
@@ -87,6 +121,11 @@ npm run dev
 
 默认访问地址为 `http://localhost:5173`。前端默认连接 `http://localhost:8080` 和 `ws://localhost:8080`，可以通过 `frontend/.env.example` 中的变量覆盖。
 
-## 下一步
+## 文档
 
-下一阶段应补齐 Docker 部署能力和答辩文档，包括前后端镜像、Compose 一键启动、接口说明和架构讲解材料。
+- [接口文档](docs/API.md)
+- [数据库与 Redis 设计](docs/DATABASE.md)
+- [答辩讲解指南](docs/DEFENSE_GUIDE.md)
+- [升级执行文档](docs/SPRING_BOOT_VUE_UPGRADE_GUIDE.md)
+
+功能截图建议放在 `docs/screenshots/`，便于答辩文档或 PPT 引用。

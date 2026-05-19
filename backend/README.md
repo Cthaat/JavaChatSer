@@ -87,6 +87,20 @@ mvn spring-boot:run
 docker run --rm -v "${PWD}:/workspace" -v "$HOME/.m2:/root/.m2" -w /workspace/backend maven:3.9-eclipse-temurin-21 mvn test
 ```
 
+## Docker 构建
+
+后端镜像由 `backend/Dockerfile` 独立构建。构建阶段使用 Maven 生成 Spring Boot JAR，运行阶段使用 JRE 21 启动：
+
+```powershell
+docker build -t javachatser-backend ./backend
+```
+
+完整项目推荐在根目录使用：
+
+```powershell
+docker compose up -d --build
+```
+
 ## 认证接口示例
 
 登录：

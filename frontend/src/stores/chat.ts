@@ -15,7 +15,7 @@ import type {
 type SocketStatus = 'idle' | 'connecting' | 'open' | 'closed'
 type ActiveConversation = { type: 'public' } | { type: 'private'; friendId: number }
 
-const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8080'
+const WS_BASE_URL = resolveWsBaseUrl()
 
 interface ChatState {
   activeConversation: ActiveConversation
@@ -234,3 +234,14 @@ export const useChatStore = defineStore('chat', {
     },
   },
 })
+
+function resolveWsBaseUrl(): string {
+  if (import.meta.env.VITE_WS_BASE_URL === undefined) {
+    return 'ws://localhost:8080'
+  }
+  if (import.meta.env.VITE_WS_BASE_URL) {
+    return import.meta.env.VITE_WS_BASE_URL
+  }
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  return `${protocol}//${window.location.host}`
+}

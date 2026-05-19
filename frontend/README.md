@@ -53,9 +53,30 @@ VITE_API_BASE_URL=http://localhost:8080
 VITE_WS_BASE_URL=ws://localhost:8080
 ```
 
+Docker Compose 构建时默认把这两个变量留空，让前端通过 Nginx 同源代理访问：
+
+```text
+http://localhost:5173/api -> backend:8080/api
+ws://localhost:5173/ws -> backend:8080/ws
+```
+
 构建验证：
 
 ```powershell
 npm run type-check
 npm run build
+```
+
+## Docker 构建
+
+前端镜像由 `frontend/Dockerfile` 独立构建。构建阶段使用 Node 生成静态资源，运行阶段使用 Nginx 托管，并代理 `/api` 和 `/ws`：
+
+```powershell
+docker build -t javachatser-frontend ./frontend
+```
+
+完整项目推荐在根目录使用：
+
+```powershell
+docker compose up -d --build
 ```
