@@ -204,6 +204,84 @@ class ChatControllerTest {
     }
 
     @Test
+    void imageMessagesCanBeSentAndMessagesCanBeRecalled() throws Exception {
+        String adminToken = tokenFor("admin");
+        String aliceToken = tokenFor("alice");
+
+        MvcResult publicResult = mockMvc.perform(post("/api/chats/public/messages")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "content": "/uploads/images/public.png",
+                                  "messageType": "IMAGE"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.messageType").value("IMAGE"))
+                .andReturn();
+        Long publicMessageId = objectMapper
+                .readTree(publicResult.getResponse().getContentAsString())
+                .at("/data/id")
+                .asLong();
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete(
+                                "/api/chats/public/messages/{messageId}",
+                                publicMessageId
+                        )
+                        .header("Authorization", "Bearer " + aliceToken))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(40300));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete(
+                                "/api/chats/public/messages/{messageId}",
+                                publicMessageId
+                        )
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.scope").value("PUBLIC"))
+                .andExpect(jsonPath("$.data.messageId").value(publicMessageId));
+
+        mockMvc.perform(get("/api/chats/public/messages")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].recalled").value(true))
+                .andExpect(jsonPath("$.data.content[0].content").value(""));
+
+        MvcResult privateResult = mockMvc.perform(post("/api/chats/private/{friendId}/messages", alice.getId())
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "content": "/uploads/images/private.webp",
+                                  "messageType": "IMAGE"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.messageType").value("IMAGE"))
+                .andReturn();
+        Long privateMessageId = objectMapper
+                .readTree(privateResult.getResponse().getContentAsString())
+                .at("/data/id")
+                .asLong();
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete(
+                                "/api/chats/private/messages/{messageId}",
+                                privateMessageId
+                        )
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.scope").value("PRIVATE"))
+                .andExpect(jsonPath("$.data.receiverId").value(alice.getId()));
+
+        mockMvc.perform(get("/api/chats/private/{friendId}/messages", alice.getId())
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].recalled").value(true))
+                .andExpect(jsonPath("$.data.content[0].content").value(""));
+    }
+
+    @Test
     void publicMessageContentMustNotBeBlank() throws Exception {
         mockMvc.perform(post("/api/chats/public/messages")
                         .header("Authorization", "Bearer " + tokenFor("admin"))

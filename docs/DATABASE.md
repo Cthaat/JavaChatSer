@@ -1,6 +1,6 @@
 # JavaChatSer Database
 
-数据库以 MySQL 为最终事实来源，Redis 只保存可重建的缓存、在线状态和未读计数。初始化脚本位于 `backend/src/main/resources/db/migration/V1__init_chat_schema.sql`，后端启动时由 Flyway 自动执行。
+数据库以 MySQL 为最终事实来源，Redis 只保存可重建的缓存、在线状态和未读计数。初始化脚本位于 `backend/src/main/resources/db/migration/`，后端启动时由 Flyway 自动执行。
 
 ## MySQL
 
@@ -60,8 +60,9 @@
 | `sender_id` | 发送者 |
 | `receiver_id` | 接收者 |
 | `content` | 文本内容 |
-| `message_type` | 当前为 `TEXT` |
+| `message_type` | `TEXT` 或 `IMAGE` |
 | `read_at` | 已读时间，未读为 `NULL` |
+| `recalled_at` | 撤回时间，未撤回为 `NULL` |
 | `created_at` | 发送时间 |
 
 查询私聊历史时使用发送者、接收者和时间索引；标记已读时更新接收者为当前用户且发送者为好友的未读消息。
@@ -75,10 +76,22 @@
 | `id` | 主键 |
 | `sender_id` | 发送者 |
 | `content` | 文本内容 |
-| `message_type` | 当前为 `TEXT` |
+| `message_type` | `TEXT` 或 `IMAGE` |
+| `recalled_at` | 撤回时间，未撤回为 `NULL` |
 | `created_at` | 发送时间 |
 
 公共消息历史按 `created_at` 升序分页返回。
+
+`V2__message_recall_columns.sql` 为私聊和公共消息增加 `recalled_at`，撤回后接口返回空内容和 `recalled=true`，保留原始记录便于审计。
+
+## 上传文件
+
+聊天图片和头像保存在后端文件系统，默认目录为 `uploads/`，Docker Compose 中挂载为 `backend-uploads:/app/uploads`。数据库只保存 URL：
+
+| 目录 | 用途 |
+| --- | --- |
+| `uploads/avatars/` | 用户头像 |
+| `uploads/images/` | 聊天图片消息 |
 
 ## Redis
 

@@ -3,9 +3,12 @@ import type {
   AuthResponse,
   Friend,
   FriendRequest,
+  MessageRecall,
   PageResponse,
   PrivateMessage,
   PublicMessage,
+  StatsOverview,
+  UploadResponse,
   UserProfile,
   FriendUser,
 } from '@/types'
@@ -45,6 +48,15 @@ export const userApi = {
       url: '/api/users/search',
       method: 'GET',
       params: { keyword, page, size },
+    })
+  },
+  updateAvatar(file: File) {
+    const formData = new FormData()
+    formData.append('file', file)
+    return request<UserProfile>({
+      url: '/api/users/me/avatar',
+      method: 'POST',
+      data: formData,
     })
   },
 }
@@ -97,11 +109,11 @@ export const chatApi = {
       params: { page, size },
     })
   },
-  sendPrivateMessage(friendId: number, content: string) {
+  sendPrivateMessage(friendId: number, content: string, messageType = 'TEXT') {
     return request<PrivateMessage>({
       url: `/api/chats/private/${friendId}/messages`,
       method: 'POST',
-      data: { content },
+      data: { content, messageType },
     })
   },
   markPrivateRead(friendId: number) {
@@ -117,11 +129,44 @@ export const chatApi = {
       params: { page, size },
     })
   },
-  sendPublicMessage(content: string) {
+  sendPublicMessage(content: string, messageType = 'TEXT') {
     return request<PublicMessage>({
       url: '/api/chats/public/messages',
       method: 'POST',
-      data: { content },
+      data: { content, messageType },
+    })
+  },
+  recallPrivateMessage(messageId: number) {
+    return request<MessageRecall>({
+      url: `/api/chats/private/messages/${messageId}`,
+      method: 'DELETE',
+    })
+  },
+  recallPublicMessage(messageId: number) {
+    return request<MessageRecall>({
+      url: `/api/chats/public/messages/${messageId}`,
+      method: 'DELETE',
+    })
+  },
+}
+
+export const statsApi = {
+  overview() {
+    return request<StatsOverview>({
+      url: '/api/stats/overview',
+      method: 'GET',
+    })
+  },
+}
+
+export const uploadApi = {
+  image(file: File) {
+    const formData = new FormData()
+    formData.append('file', file)
+    return request<UploadResponse>({
+      url: '/api/uploads/images',
+      method: 'POST',
+      data: formData,
     })
   },
 }

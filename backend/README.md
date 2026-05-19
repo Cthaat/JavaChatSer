@@ -1,6 +1,6 @@
 # JavaChatSer Backend
 
-这里用于承载新版 Spring Boot 后端代码。当前已完成阶段 1 到阶段 7：Spring Boot 基础骨架、数据库迁移脚本、JPA 实体模型、Repository、JWT 认证模块、好友模块、私聊 REST 模块、WebSocket 实时通信和公共聊天室 REST 接口。
+这里用于承载新版 Spring Boot 后端代码。当前已完成 Spring Boot 基础骨架、数据库迁移脚本、JPA 实体模型、Repository、JWT 认证模块、好友模块、私聊 REST、WebSocket 实时通信、公共聊天室、上传、消息撤回和统计接口。
 
 ## 目标技术栈
 
@@ -22,6 +22,8 @@
 - `user/`：用户注册、登录、资料。
 - `friend/`：好友搜索、申请、同意、拒绝、删除。
 - `chat/`：私聊、公共聊天室、消息持久化。
+- `media/`：头像和聊天图片上传。
+- `stats/`：系统概览和个人统计。
 - `websocket/`：实时推送、在线状态、Session 管理。
 
 ## 已完成能力
@@ -57,13 +59,19 @@
 - WebSocket `PING` 会返回 `PONG`，心跳消息会刷新在线状态 TTL。
 - `GET /api/chats/public/messages` 支持公共聊天室历史分页，按时间升序返回。
 - `POST /api/chats/public/messages` 支持发送公共消息，发送后先写 MySQL，再写 Redis `chat:public:recent`，最后向在线 WebSocket 连接广播。
+- `POST /api/users/me/avatar` 支持上传头像并更新当前用户资料。
+- `POST /api/uploads/images` 支持上传聊天图片，返回可访问的 `/uploads/images/...` 地址。
+- 私聊和公共消息均支持 `messageType=IMAGE` 图片消息。
+- `DELETE /api/chats/private/messages/{messageId}` 和 `DELETE /api/chats/public/messages/{messageId}` 支持消息撤回，并推送 `MESSAGE_RECALLED`。
+- 好友申请创建后会向在线接收者推送 `FRIEND_REQUEST`。
+- `GET /api/stats/overview` 支持管理员全局统计和普通用户个人统计。
 
 ## 数据库迁移
 
 迁移脚本位于：
 
 ```text
-src/main/resources/db/migration/V1__init_chat_schema.sql
+src/main/resources/db/migration/
 ```
 
 默认启动后端时会自动执行 Flyway 迁移。若本机 `3306` 已被占用，可以临时指定 Compose 暴露端口：
@@ -172,6 +180,24 @@ Invoke-RestMethod -Uri http://localhost:8080/api/chats/private/2/read `
   -Headers @{ Authorization = "Bearer <token>" }
 ```
 
+发送图片私聊：
+
+```powershell
+Invoke-RestMethod -Uri http://localhost:8080/api/chats/private/2/messages `
+  -Method Post `
+  -ContentType 'application/json' `
+  -Headers @{ Authorization = "Bearer <token>" } `
+  -Body '{"content":"/uploads/images/demo.png","messageType":"IMAGE"}'
+```
+
+撤回私聊：
+
+```powershell
+Invoke-RestMethod -Uri http://localhost:8080/api/chats/private/messages/1 `
+  -Method Delete `
+  -Headers @{ Authorization = "Bearer <token>" }
+```
+
 ## 公共聊天室接口示例
 
 发送公共消息：
@@ -188,6 +214,15 @@ Invoke-RestMethod -Uri http://localhost:8080/api/chats/public/messages `
 
 ```powershell
 Invoke-RestMethod -Uri 'http://localhost:8080/api/chats/public/messages?page=0&size=20' `
+  -Headers @{ Authorization = "Bearer <token>" }
+```
+
+## 上传和统计接口示例
+
+上传头像或图片使用 `multipart/form-data` 字段名 `file`。统计接口示例：
+
+```powershell
+Invoke-RestMethod -Uri http://localhost:8080/api/stats/overview `
   -Headers @{ Authorization = "Bearer <token>" }
 ```
 
@@ -226,4 +261,4 @@ ws://localhost:8080/ws/chat?token=<JWT>
 }
 ```
 
-服务端推送统一使用 `type + data` 结构，当前类型包括 `PRIVATE_MESSAGE`、`PUBLIC_MESSAGE`、`FRIEND_STATUS`、`ONLINE_USERS`、`PONG` 和 `ERROR`。
+服务端推送统一使用 `type + data` 结构，当前类型包括 `PRIVATE_MESSAGE`、`PUBLIC_MESSAGE`、`FRIEND_REQUEST`、`FRIEND_STATUS`、`MESSAGE_RECALLED`、`ONLINE_USERS`、`PONG` 和 `ERROR`。

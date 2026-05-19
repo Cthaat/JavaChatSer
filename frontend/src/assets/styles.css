@@ -20,6 +20,13 @@ body {
     #f4f7fb;
 }
 
+[data-theme='dark'] body {
+  background:
+    linear-gradient(180deg, rgba(19, 26, 33, 0.94), rgba(14, 18, 24, 0.98)),
+    #0e1218;
+  color: #e8eef5;
+}
+
 button,
 input {
   font: inherit;
@@ -193,6 +200,15 @@ input:focus {
   color: #ad3939;
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 .text-link {
   justify-self: center;
   color: #2a6f97;
@@ -295,6 +311,11 @@ input:focus {
   margin-top: auto;
   padding-top: 16px;
   border-top: 1px solid #e6edf3;
+}
+
+.nav-user > div:nth-child(2) {
+  min-width: 0;
+  flex: 1;
 }
 
 .avatar {
@@ -448,6 +469,37 @@ input:focus {
   white-space: pre-wrap;
 }
 
+.message-action {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #7a8898;
+}
+
+.message-action:hover {
+  background: #eef3f7;
+  color: #ad3939;
+}
+
+.message-image {
+  display: block;
+  width: min(320px, 100%);
+  max-height: 260px;
+  margin-top: 8px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.message-recalled {
+  color: #7a8898;
+  font-style: italic;
+}
+
 .message-form,
 .toolbar {
   display: flex;
@@ -533,6 +585,14 @@ input:focus {
   font-weight: 850;
 }
 
+.profile-avatar img,
+.avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+}
+
 .profile-card h2,
 .profile-card p {
   margin: 0;
@@ -570,6 +630,127 @@ input:focus {
   padding: 14px;
 }
 
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.metric-card {
+  display: grid;
+  min-height: 150px;
+  align-content: start;
+  gap: 8px;
+  border: 1px solid #d8e1ea;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 18px;
+}
+
+.metric-card svg {
+  color: #2a6f97;
+}
+
+.metric-card span {
+  color: #667687;
+  font-weight: 750;
+}
+
+.metric-card strong {
+  font-size: 34px;
+  line-height: 1;
+}
+
+.metric-card small {
+  color: #7a8898;
+}
+
+[data-theme='dark'] input,
+[data-theme='dark'] .auth-panel,
+[data-theme='dark'] .app-nav,
+[data-theme='dark'] .chat-layout,
+[data-theme='dark'] .surface,
+[data-theme='dark'] .message-bubble,
+[data-theme='dark'] .secondary-button,
+[data-theme='dark'] .icon-button,
+[data-theme='dark'] .metric-card {
+  border-color: #334152;
+  background: #171f29;
+  color: #e8eef5;
+}
+
+[data-theme='dark'] .auth-card,
+[data-theme='dark'] .app-main,
+[data-theme='dark'] .conversation-list,
+[data-theme='dark'] .chat-panel {
+  background: #101721;
+}
+
+[data-theme='dark'] .message-list,
+[data-theme='dark'] .status-grid div {
+  background: #121a24;
+}
+
+[data-theme='dark'] .nav-link,
+[data-theme='dark'] .conversation-item,
+[data-theme='dark'] label {
+  color: #d9e3ed;
+}
+
+[data-theme='dark'] .nav-link.router-link-active,
+[data-theme='dark'] .conversation-item.active,
+[data-theme='dark'] .message-bubble.own {
+  background: #183647;
+  color: #f1f7fb;
+}
+
+[data-theme='dark'] .brand span,
+[data-theme='dark'] .nav-user span,
+[data-theme='dark'] .list-row span,
+[data-theme='dark'] .conversation-item small,
+[data-theme='dark'] .panel-header p,
+[data-theme='dark'] .definition-list dt,
+[data-theme='dark'] .empty-text,
+[data-theme='dark'] .metric-card span,
+[data-theme='dark'] .metric-card small,
+[data-theme='dark'] .message-meta,
+[data-theme='dark'] .message-recalled {
+  color: #a9b8c7;
+}
+
+[data-theme='dark'] .panel-header,
+[data-theme='dark'] .message-form,
+[data-theme='dark'] .toolbar,
+[data-theme='dark'] .nav-user,
+[data-theme='dark'] .conversation-list,
+[data-theme='dark'] .list-row {
+  border-color: #334152;
+}
+
+[data-theme='dark'] .socket-state {
+  background: #202b38;
+  color: #a9b8c7;
+}
+
+[data-theme='dark'] .socket-state.open {
+  background: #163c34;
+  color: #7ee0bd;
+}
+
+[data-theme='dark'] .form-error {
+  background: #3d1f25;
+  color: #ffb4b4;
+}
+
+[data-theme='dark'] .form-notice {
+  background: #163c34;
+  color: #9ee7c9;
+}
+
+[data-theme='dark'] .message-action:hover {
+  background: #273445;
+}
+
 @media (max-width: 980px) {
   .app-shell,
   .chat-layout,
@@ -586,7 +767,7 @@ input:focus {
   }
 
   .nav-links {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .chat-layout {
@@ -644,7 +825,8 @@ input:focus {
   }
 
   .definition-list,
-  .status-grid {
+  .status-grid,
+  .metric-grid {
     grid-template-columns: 1fr;
   }
 }

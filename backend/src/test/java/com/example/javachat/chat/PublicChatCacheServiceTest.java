@@ -45,6 +45,8 @@ class PublicChatCacheServiceTest {
                 7L,
                 "hello cached public room",
                 "TEXT",
+                false,
+                null,
                 LocalDateTime.of(2026, 5, 19, 20, 0)
         );
 

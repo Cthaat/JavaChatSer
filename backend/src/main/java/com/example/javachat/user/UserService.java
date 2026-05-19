@@ -2,6 +2,7 @@ package com.example.javachat.user;
 
 import com.example.javachat.common.BusinessException;
 import com.example.javachat.common.ErrorCode;
+import com.example.javachat.media.MediaStorageService;
 import com.example.javachat.security.JwtTokenProvider;
 import com.example.javachat.security.LoginUser;
 import com.example.javachat.user.dto.AuthResponse;
@@ -15,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class UserService {
@@ -24,15 +26,18 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final MediaStorageService mediaStorageService;
 
     public UserService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            JwtTokenProvider jwtTokenProvider
+            JwtTokenProvider jwtTokenProvider,
+            MediaStorageService mediaStorageService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.mediaStorageService = mediaStorageService;
     }
 
     @Transactional
@@ -75,6 +80,14 @@ public class UserService {
         return PageResponse.from(userRepository
                 .searchEnabledUsers(normalizedKeyword, currentUserId, pageable)
                 .map(UserSearchResponse::from));
+    }
+
+    @Transactional
+    public UserProfileResponse updateAvatar(Long userId, MultipartFile file) {
+        User user = userRepository.findByIdAndEnabledTrue(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED));
+        user.setAvatarUrl(mediaStorageService.storeImage(file, "avatars").url());
+        return UserProfileResponse.from(userRepository.save(user));
     }
 
     private AuthResponse toAuthResponse(User user) {

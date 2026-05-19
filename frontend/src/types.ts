@@ -53,7 +53,9 @@ export interface PrivateMessage {
   receiverId: number
   content: string
   messageType: string
+  recalled: boolean
   readAt: string | null
+  recalledAt: string | null
   createdAt: string
 }
 
@@ -62,7 +64,35 @@ export interface PublicMessage {
   senderId: number
   content: string
   messageType: string
+  recalled: boolean
+  recalledAt: string | null
   createdAt: string
+}
+
+export interface MessageRecall {
+  scope: 'PRIVATE' | 'PUBLIC'
+  messageId: number
+  senderId: number
+  receiverId: number | null
+  recalledAt: string
+}
+
+export interface StatsOverview {
+  scope: 'GLOBAL' | 'PERSONAL'
+  registeredUserCount: number
+  onlineUserCount: number
+  todayPrivateMessageCount: number
+  todayPublicMessageCount: number
+  totalPrivateMessageCount: number
+  totalPublicMessageCount: number
+  pendingFriendRequestCount: number
+  acceptedFriendCount: number
+}
+
+export interface UploadResponse {
+  url: string
+  contentType: string
+  size: number
 }
 
 export interface WebSocketEnvelope<T = unknown> {
@@ -73,7 +103,9 @@ export interface WebSocketEnvelope<T = unknown> {
 export type WebSocketMessageType =
   | 'PRIVATE_MESSAGE'
   | 'PUBLIC_MESSAGE'
+  | 'FRIEND_REQUEST'
   | 'FRIEND_STATUS'
+  | 'MESSAGE_RECALLED'
   | 'ONLINE_USERS'
   | 'PING'
   | 'PONG'

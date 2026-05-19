@@ -35,6 +35,9 @@ public class PrivateMessage {
     @Column(name = "read_at")
     private LocalDateTime readAt;
 
+    @Column(name = "recalled_at")
+    private LocalDateTime recalledAt;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -46,6 +49,11 @@ public class PrivateMessage {
         this.senderId = senderId;
         this.receiverId = receiverId;
         this.content = content;
+    }
+
+    public PrivateMessage(Long senderId, Long receiverId, String content, MessageType messageType) {
+        this(senderId, receiverId, content);
+        this.messageType = messageType;
     }
 
     public Long getId() {
@@ -90,6 +98,18 @@ public class PrivateMessage {
 
     public void setReadAt(LocalDateTime readAt) {
         this.readAt = readAt;
+    }
+
+    public LocalDateTime getRecalledAt() {
+        return recalledAt;
+    }
+
+    public void recall(LocalDateTime recalledAt) {
+        this.recalledAt = recalledAt;
+    }
+
+    public boolean isRecalled() {
+        return recalledAt != null;
     }
 
     public LocalDateTime getCreatedAt() {

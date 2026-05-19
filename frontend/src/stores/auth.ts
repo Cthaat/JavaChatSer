@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-import { authApi } from '@/api'
+import { authApi, userApi } from '@/api'
 import { tokenStorage } from '@/api/client'
 import type { AuthResponse, UserProfile } from '@/types'
 
@@ -58,6 +58,9 @@ export const useAuthStore = defineStore('auth', {
       } finally {
         this.bootstrapped = true
       }
+    },
+    async updateAvatar(file: File) {
+      this.user = await userApi.updateAvatar(file)
     },
     async logout() {
       try {

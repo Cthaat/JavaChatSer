@@ -15,6 +15,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByUsername(String username);
 
+    long countByEnabledTrue();
+
     @Query("""
             select user
             from User user

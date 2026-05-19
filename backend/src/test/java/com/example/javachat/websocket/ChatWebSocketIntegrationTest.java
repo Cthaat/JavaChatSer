@@ -83,6 +83,7 @@ class ChatWebSocketIntegrationTest {
 
     private User admin;
     private User alice;
+    private User bob;
 
     @BeforeEach
     void setUp() {
@@ -93,6 +94,7 @@ class ChatWebSocketIntegrationTest {
 
         admin = createUser("admin", "Admin");
         alice = createUser("alice", "Alice");
+        bob = createUser("bob", "Bob");
         acceptFriendship(admin, alice);
     }
 
@@ -189,6 +191,29 @@ class ChatWebSocketIntegrationTest {
 
         adminSession.close();
         aliceSession.close();
+    }
+
+    @Test
+    void restFriendRequestNotifiesOnlineReceiver() throws Exception {
+        QueueingWebSocketHandler bobHandler = new QueueingWebSocketHandler(objectMapper);
+
+        WebSocketSession bobSession = connect(jwtTokenProvider.createToken(bob), bobHandler);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(jwtTokenProvider.createToken(admin));
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                "/api/friends/requests",
+                new HttpEntity<>("{\"friendId\":" + bob.getId() + "}", headers),
+                String.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        JsonNode notification = bobHandler.awaitType(WebSocketMessageType.FRIEND_REQUEST);
+        assertThat(notification.at("/data/status").asText()).isEqualTo("PENDING");
+        assertThat(notification.at("/data/requester/username").asText()).isEqualTo("admin");
+
+        bobSession.close();
     }
 
     @Test

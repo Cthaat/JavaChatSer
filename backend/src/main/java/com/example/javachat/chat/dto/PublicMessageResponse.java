@@ -8,6 +8,8 @@ public record PublicMessageResponse(
         Long senderId,
         String content,
         String messageType,
+        boolean recalled,
+        LocalDateTime recalledAt,
         LocalDateTime createdAt
 ) {
 
@@ -15,8 +17,10 @@ public record PublicMessageResponse(
         return new PublicMessageResponse(
                 message.getId(),
                 message.getSenderId(),
-                message.getContent(),
+                message.isRecalled() ? "" : message.getContent(),
                 message.getMessageType().name(),
+                message.isRecalled(),
+                message.getRecalledAt(),
                 message.getCreatedAt()
         );
     }

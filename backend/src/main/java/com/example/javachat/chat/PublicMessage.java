@@ -29,6 +29,9 @@ public class PublicMessage {
     @Column(name = "message_type", nullable = false, length = 20)
     private MessageType messageType = MessageType.TEXT;
 
+    @Column(name = "recalled_at")
+    private LocalDateTime recalledAt;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -39,6 +42,11 @@ public class PublicMessage {
     public PublicMessage(Long senderId, String content) {
         this.senderId = senderId;
         this.content = content;
+    }
+
+    public PublicMessage(Long senderId, String content, MessageType messageType) {
+        this(senderId, content);
+        this.messageType = messageType;
     }
 
     public Long getId() {
@@ -67,6 +75,18 @@ public class PublicMessage {
 
     public void setMessageType(MessageType messageType) {
         this.messageType = messageType;
+    }
+
+    public LocalDateTime getRecalledAt() {
+        return recalledAt;
+    }
+
+    public void recall(LocalDateTime recalledAt) {
+        this.recalledAt = recalledAt;
+    }
+
+    public boolean isRecalled() {
+        return recalledAt != null;
     }
 
     public LocalDateTime getCreatedAt() {

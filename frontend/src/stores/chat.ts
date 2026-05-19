@@ -1,11 +1,13 @@
 import { defineStore } from 'pinia'
 
-import { chatApi } from '@/api'
+import { chatApi, uploadApi } from '@/api'
 import { tokenStorage } from '@/api/client'
 import { useAuthStore } from '@/stores/auth'
 import { useFriendsStore } from '@/stores/friends'
 import type {
   FriendStatusMessage,
+  FriendRequest,
+  MessageRecall,
   PrivateMessage,
   PublicMessage,
   WebSocketEnvelope,
@@ -84,7 +86,7 @@ export const useChatStore = defineStore('chat', {
         this.loadingMessages = false
       }
     },
-    async sendMessage(content: string) {
+    async sendMessage(content: string, messageType = 'TEXT') {
       const normalizedContent = content.trim()
       if (!normalizedContent) {
         return
@@ -92,27 +94,43 @@ export const useChatStore = defineStore('chat', {
       this.sending = true
       try {
         if (this.activeConversation.type === 'public') {
-          await this.sendPublicMessage(normalizedContent)
+          await this.sendPublicMessage(normalizedContent, messageType)
           return
         }
-        await this.sendPrivateMessage(this.activeConversation.friendId, normalizedContent)
+        await this.sendPrivateMessage(this.activeConversation.friendId, normalizedContent, messageType)
       } finally {
         this.sending = false
       }
     },
-    async sendPublicMessage(content: string) {
-      if (this.isSocketOpen) {
-        this.socket?.send(JSON.stringify({ type: 'PUBLIC_MESSAGE', content }))
-        return
+    async sendImage(file: File) {
+      this.sending = true
+      try {
+        const uploaded = await uploadApi.image(file)
+        await this.sendMessage(uploaded.url, 'IMAGE')
+      } finally {
+        this.sending = false
       }
-      this.addPublicMessage(await chatApi.sendPublicMessage(content))
     },
-    async sendPrivateMessage(friendId: number, content: string) {
+    async sendPublicMessage(content: string, messageType = 'TEXT') {
       if (this.isSocketOpen) {
-        this.socket?.send(JSON.stringify({ type: 'PRIVATE_MESSAGE', receiverId: friendId, content }))
+        this.socket?.send(JSON.stringify({ type: 'PUBLIC_MESSAGE', content, messageType }))
         return
       }
-      this.addPrivateMessage(friendId, await chatApi.sendPrivateMessage(friendId, content))
+      this.addPublicMessage(await chatApi.sendPublicMessage(content, messageType))
+    },
+    async sendPrivateMessage(friendId: number, content: string, messageType = 'TEXT') {
+      if (this.isSocketOpen) {
+        this.socket?.send(JSON.stringify({ type: 'PRIVATE_MESSAGE', receiverId: friendId, content, messageType }))
+        return
+      }
+      this.addPrivateMessage(friendId, await chatApi.sendPrivateMessage(friendId, content, messageType))
+    },
+    async recallMessage(message: PrivateMessage | PublicMessage) {
+      const recall =
+        this.activeConversation.type === 'public'
+          ? await chatApi.recallPublicMessage(message.id)
+          : await chatApi.recallPrivateMessage(message.id)
+      this.applyRecall(recall)
     },
     connect() {
       const token = tokenStorage.get()
@@ -165,11 +183,17 @@ export const useChatStore = defineStore('chat', {
           friendsStore.updateOnline(message.userId, message.online)
           break
         }
+        case 'FRIEND_REQUEST':
+          friendsStore.mergeRequest(envelope.data as FriendRequest)
+          break
         case 'PRIVATE_MESSAGE':
           this.receivePrivateMessage(envelope.data as PrivateMessage)
           break
         case 'PUBLIC_MESSAGE':
           this.addPublicMessage(envelope.data as PublicMessage)
+          break
+        case 'MESSAGE_RECALLED':
+          this.applyRecall(envelope.data as MessageRecall)
           break
         case 'ERROR':
           this.socketError = (envelope.data as WebSocketErrorMessage).message
@@ -212,6 +236,32 @@ export const useChatStore = defineStore('chat', {
         return
       }
       this.publicMessages = [...this.publicMessages, message]
+    },
+    applyRecall(recall: MessageRecall) {
+      if (recall.scope === 'PUBLIC') {
+        this.publicMessages = this.publicMessages.map((message) =>
+          message.id === recall.messageId
+            ? { ...message, content: '', recalled: true, recalledAt: recall.recalledAt }
+            : message,
+        )
+        return
+      }
+
+      const authStore = useAuthStore()
+      const currentUserId = authStore.user?.id
+      const friendId = recall.senderId === currentUserId ? recall.receiverId : recall.senderId
+      if (!friendId) {
+        return
+      }
+      const messages = this.privateMessages[friendId] ?? []
+      this.privateMessages = {
+        ...this.privateMessages,
+        [friendId]: messages.map((message) =>
+          message.id === recall.messageId
+            ? { ...message, content: '', recalled: true, recalledAt: recall.recalledAt }
+            : message,
+        ),
+      }
     },
     clearTimers() {
       if (this.reconnectTimer) {

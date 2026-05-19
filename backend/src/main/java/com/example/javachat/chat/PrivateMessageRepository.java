@@ -25,6 +25,24 @@ public interface PrivateMessageRepository extends JpaRepository<PrivateMessage, 
 
     long countByReceiverIdAndSenderIdAndReadAtIsNull(Long receiverId, Long senderId);
 
+    long countByCreatedAtGreaterThanEqual(LocalDateTime startAt);
+
+    @Query("""
+            select count(message)
+            from PrivateMessage message
+            where message.senderId = :userId
+               or message.receiverId = :userId
+            """)
+    long countByParticipant(@Param("userId") Long userId);
+
+    @Query("""
+            select count(message)
+            from PrivateMessage message
+            where message.createdAt >= :startAt
+              and (message.senderId = :userId or message.receiverId = :userId)
+            """)
+    long countByParticipantSince(@Param("userId") Long userId, @Param("startAt") LocalDateTime startAt);
+
     @Modifying
     @Query("""
             update PrivateMessage message

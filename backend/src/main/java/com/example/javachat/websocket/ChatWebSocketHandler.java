@@ -109,7 +109,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         PrivateMessageResponse response = chatService.sendPrivateMessage(
                 loginUser.id(),
                 receiverId,
-                new PrivateMessageSendRequest(content)
+                new PrivateMessageSendRequest(content, optionalText(payload, "messageType"))
         );
         WebSocketEnvelope<PrivateMessageResponse> envelope = WebSocketEnvelope.of(
                 WebSocketMessageType.PRIVATE_MESSAGE,
@@ -121,7 +121,11 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     private void handlePublicMessage(LoginUser loginUser, JsonNode payload) {
         String content = requiredText(payload, "content");
-        PublicMessageResponse response = chatService.sendPublicMessage(loginUser.id(), content);
+        PublicMessageResponse response = chatService.sendPublicMessage(
+                loginUser.id(),
+                content,
+                optionalText(payload, "messageType")
+        );
         chatRealtimeNotifier.broadcastPublicMessage(response);
     }
 
@@ -175,5 +179,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "缺少必要字段: " + fieldName);
         }
         return value.asText();
+    }
+
+    private static String optionalText(JsonNode payload, String fieldName) {
+        JsonNode value = payload.get(fieldName);
+        return value != null && value.isTextual() ? value.asText() : null;
     }
 }

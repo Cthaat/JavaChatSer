@@ -5,8 +5,8 @@ JavaChatSer 是一个从传统 Java Web 聊天项目升级而来的 Spring Boot 
 ## 当前状态
 
 - 旧版代码仍保留在 `src/`、`pom.xml`、`Dockerfile`、`start.sh` 中，用作业务参考。
-- 新版后端已在 `backend/` 中完成 Spring Boot 3 + Java 21 骨架、认证、好友、私聊 REST、WebSocket 实时通信和公共聊天室接口。
-- 新版前端已在 `frontend/` 中建立 Vite + Vue 3 工程，并接入后端认证、好友、聊天和 WebSocket。
+- 新版后端已在 `backend/` 中完成 Spring Boot 3 + Java 21 骨架、认证、好友、私聊 REST、WebSocket 实时通信、公共聊天室、文件上传、消息撤回和统计接口。
+- 新版前端已在 `frontend/` 中建立 Vite + Vue 3 工程，并接入后端认证、好友、聊天、WebSocket、统计面板、头像上传、图片消息和深色模式。
 - 根目录 `docker-compose.yml` 已完成 MySQL、Redis、backend、frontend 一键部署。
 
 ## 旧版业务参考
@@ -50,6 +50,7 @@ JavaChatSer/
 8. 阶段 7：公共聊天室。已完成。
 9. 阶段 8：Vue 前端。已完成。
 10. 阶段 9：Docker 部署和答辩文档。已完成。
+11. 阶段 12：增强版本。已完成公共聊天室、好友申请通知、头像上传、消息撤回、图片消息、统计面板、测试补充和深色模式。
 
 ## 快速开始
 
@@ -99,6 +100,7 @@ docker compose down -v
 - `redis`：Redis 7，缓存好友列表、消息和在线状态。
 - `backend`：Spring Boot 服务，默认端口 `8080`。
 - `frontend`：Vue 静态资源 + Nginx 反向代理，默认端口 `5173`。
+- `backend-uploads`：头像和聊天图片持久化卷。
 
 ## 默认端口
 

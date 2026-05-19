@@ -36,6 +36,10 @@ spring:
   sql:
     init:
       mode: never
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
   flyway:
     enabled: ${SPRING_FLYWAY_ENABLED:true}
     locations: classpath:db/migration
@@ -69,6 +73,8 @@ app:
   jwt:
     secret: ${JWT_SECRET:change-this-secret-before-production}
     expiration: ${JWT_EXPIRATION:86400000}
+  upload:
+    base-dir: ${UPLOAD_BASE_DIR:uploads}
 
 logging:
   level:

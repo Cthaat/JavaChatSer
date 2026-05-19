@@ -26,6 +26,7 @@ Nginx frontend container
   |-- static Vue files
   |-- /api -> backend:8080
   |-- /ws  -> backend:8080
+  |-- /uploads -> backend:8080
        |
        v
 Spring Boot backend
@@ -61,6 +62,10 @@ Spring Boot backend
 
 用户 WebSocket 连接成功后，后端写入 `online:user:{userId}`，并通知好友该用户上线。心跳会刷新 2 分钟 TTL。断开最后一个会话后，后端删除在线状态并通知好友离线。私聊未读数保存在 Redis `unread:{receiverId}:{senderId}`，读取好友列表时返回。
 
+### 增强功能
+
+第 12 节增强版本已经落到可演示页面和接口：好友申请会向在线接收者推送 `FRIEND_REQUEST`；头像和聊天图片通过统一上传服务保存到 `/uploads`；文本和图片消息都支持撤回，撤回后推送 `MESSAGE_RECALLED`；`/dashboard` 调用 `/api/stats/overview` 展示管理员全局统计或普通用户个人统计；前端提供深色模式切换。
+
 ## 数据流示例
 
 ### 登录
@@ -95,6 +100,15 @@ Spring Boot backend
   -> WebSocket 广播给所有在线用户
 ```
 
+### 好友申请通知
+
+```text
+用户 A 发送好友申请
+  -> 写 friend_relation(PENDING)
+  -> 如果用户 B 在线，WebSocket 推送 FRIEND_REQUEST
+  -> B 的好友页申请数量实时变化
+```
+
 ## 部署演示
 
 启动：
@@ -126,7 +140,9 @@ testUser3 / 123456
 4. 另一个窗口接受申请。
 5. 两个窗口进入聊天页，演示在线状态、私聊实时收发、未读数。
 6. 切换公共聊天室，演示公共消息实时广播。
-7. 刷新页面，演示登录状态恢复和历史消息加载。
+7. 上传一张聊天图片，撤回该消息，演示图片消息和撤回同步。
+8. 进入个人资料页上传头像，再进入系统概览页查看统计。
+9. 切换深色模式，刷新页面演示主题保持。
 
 功能截图建议放在 `docs/screenshots/`，答辩 PPT 或报告可以直接引用该目录。
 

@@ -10,6 +10,7 @@ import com.example.javachat.friend.dto.FriendResponse;
 import com.example.javachat.friend.dto.FriendUserResponse;
 import com.example.javachat.user.User;
 import com.example.javachat.user.UserRepository;
+import com.example.javachat.websocket.ChatRealtimeNotifier;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -26,19 +27,22 @@ public class FriendService {
     private final PrivateMessageRepository privateMessageRepository;
     private final PrivateChatCacheService privateChatCacheService;
     private final FriendCacheService friendCacheService;
+    private final ChatRealtimeNotifier chatRealtimeNotifier;
 
     public FriendService(
             FriendRepository friendRepository,
             UserRepository userRepository,
             PrivateMessageRepository privateMessageRepository,
             PrivateChatCacheService privateChatCacheService,
-            FriendCacheService friendCacheService
+            FriendCacheService friendCacheService,
+            ChatRealtimeNotifier chatRealtimeNotifier
     ) {
         this.friendRepository = friendRepository;
         this.userRepository = userRepository;
         this.privateMessageRepository = privateMessageRepository;
         this.privateChatCacheService = privateChatCacheService;
         this.friendCacheService = friendCacheService;
+        this.chatRealtimeNotifier = chatRealtimeNotifier;
     }
 
     @Transactional(readOnly = true)
@@ -95,7 +99,9 @@ public class FriendService {
                 : existingForward;
         relation.setStatus(FriendStatus.PENDING);
         FriendRelation savedRelation = friendRepository.save(relation);
-        return FriendRequestResponse.from(savedRelation, FriendUserResponse.from(requester));
+        FriendRequestResponse response = FriendRequestResponse.from(savedRelation, FriendUserResponse.from(requester));
+        chatRealtimeNotifier.notifyFriendRequest(targetUser.getId(), response);
+        return response;
     }
 
     @Transactional(readOnly = true)

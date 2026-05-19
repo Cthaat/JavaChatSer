@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Hash, MessageCircle, RefreshCw, Send, Wifi, WifiOff } from '@lucide/vue'
+import { Hash, Image as ImageIcon, MessageCircle, RefreshCw, Send, Trash2, Wifi, WifiOff } from '@lucide/vue'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
+import { getApiBaseUrl } from '@/api/client'
 import AppShell from '@/components/AppShell.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useChatStore } from '@/stores/chat'
@@ -13,6 +14,7 @@ const friendsStore = useFriendsStore()
 const chatStore = useChatStore()
 const draft = ref('')
 const messageList = ref<HTMLElement | null>(null)
+const imageInput = ref<HTMLInputElement | null>(null)
 
 const activeFriend = computed(() => {
   if (chatStore.activeConversation.type !== 'private') {
@@ -59,11 +61,42 @@ function isOwnMessage(message: PrivateMessage | PublicMessage) {
   return message.senderId === authStore.user?.id
 }
 
+function isImageMessage(message: PrivateMessage | PublicMessage) {
+  return message.messageType === 'IMAGE' && !message.recalled
+}
+
+function resolveMediaUrl(url: string) {
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url
+  }
+  const baseUrl = getApiBaseUrl()
+  return baseUrl ? `${baseUrl}${url}` : url
+}
+
+function openImagePicker() {
+  imageInput.value?.click()
+}
+
 async function send() {
   const content = draft.value
   draft.value = ''
   await chatStore.sendMessage(content)
   await scrollToBottom()
+}
+
+async function uploadImage(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  target.value = ''
+  if (!file) {
+    return
+  }
+  await chatStore.sendImage(file)
+  await scrollToBottom()
+}
+
+async function recall(message: PrivateMessage | PublicMessage) {
+  await chatStore.recallMessage(message)
 }
 
 async function refreshActive() {
@@ -171,13 +204,30 @@ onMounted(async () => {
             <div class="message-meta">
               <span>{{ senderName(message) }}</span>
               <time>{{ message.createdAt }}</time>
+              <button
+                v-if="isOwnMessage(message) && !message.recalled"
+                class="message-action"
+                type="button"
+                title="撤回消息"
+                @click="recall(message)"
+              >
+                <Trash2 :size="14" />
+              </button>
             </div>
-            <p>{{ message.content }}</p>
+            <p v-if="message.recalled" class="message-recalled">消息已撤回</p>
+            <a v-else-if="isImageMessage(message)" :href="resolveMediaUrl(message.content)" target="_blank">
+              <img class="message-image" :src="resolveMediaUrl(message.content)" alt="聊天图片" />
+            </a>
+            <p v-else>{{ message.content }}</p>
           </article>
         </div>
 
         <form class="message-form" @submit.prevent="send">
           <MessageCircle :size="18" />
+          <button class="icon-button" type="button" title="发送图片" :disabled="chatStore.sending" @click="openImagePicker">
+            <ImageIcon :size="18" />
+          </button>
+          <input ref="imageInput" class="visually-hidden" type="file" accept="image/*" @change="uploadImage" />
           <input
             v-model="draft"
             maxlength="2000"

@@ -50,6 +50,9 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       JWT_SECRET: ${JWT_SECRET:-change-this-secret-before-production}
+      UPLOAD_BASE_DIR: ${UPLOAD_BASE_DIR:-/app/uploads}
+    volumes:
+      - backend-uploads:/app/uploads
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     healthcheck:
@@ -81,3 +84,4 @@ services:
 volumes:
   mysql-data:
   redis-data:
+  backend-uploads:

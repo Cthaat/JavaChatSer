@@ -2,6 +2,7 @@ package com.example.javachat.chat;
 
 import com.example.javachat.chat.dto.PrivateMessageResponse;
 import com.example.javachat.chat.dto.PrivateMessageSendRequest;
+import com.example.javachat.chat.dto.MessageRecallResponse;
 import com.example.javachat.chat.dto.PublicMessageResponse;
 import com.example.javachat.chat.dto.ReadReceiptResponse;
 import com.example.javachat.common.BusinessException;
@@ -56,7 +57,9 @@ public class ChatService {
             PrivateMessageSendRequest request
     ) {
         ensurePrivateChatAllowed(senderId, receiverId);
-        PrivateMessage message = new PrivateMessage(senderId, receiverId, request.content().trim());
+        MessageType messageType = parseMessageType(request.messageType());
+        validateMessageContent(request.content(), messageType);
+        PrivateMessage message = new PrivateMessage(senderId, receiverId, request.content().trim(), messageType);
         PrivateMessage savedMessage = privateMessageRepository.saveAndFlush(message);
         PrivateMessageResponse response = PrivateMessageResponse.from(savedMessage);
 
@@ -83,16 +86,96 @@ public class ChatService {
 
     @Transactional
     public PublicMessageResponse sendPublicMessage(Long senderId, String content) {
-        if (content == null || content.isBlank()) {
-            throw new BusinessException(ErrorCode.BAD_REQUEST, "消息内容不能为空");
-        }
+        return sendPublicMessage(senderId, content, null);
+    }
+
+    @Transactional
+    public PublicMessageResponse sendPublicMessage(Long senderId, String content, String messageTypeValue) {
+        MessageType messageType = parseMessageType(messageTypeValue);
+        validateMessageContent(content, messageType);
         if (userRepository.findByIdAndEnabledTrue(senderId).isEmpty()) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
-        PublicMessage savedMessage = publicMessageRepository.saveAndFlush(new PublicMessage(senderId, content.trim()));
+        PublicMessage savedMessage = publicMessageRepository.saveAndFlush(
+                new PublicMessage(senderId, content.trim(), messageType)
+        );
         PublicMessageResponse response = PublicMessageResponse.from(savedMessage);
         publicChatCacheService.cacheRecentMessage(response);
         return response;
+    }
+
+    @Transactional
+    public MessageRecallResponse recallPrivateMessage(Long requesterId, boolean admin, Long messageId) {
+        PrivateMessage message = privateMessageRepository.findById(messageId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "消息不存在"));
+        if (!admin && !message.getSenderId().equals(requesterId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "只能撤回自己发送的消息");
+        }
+        LocalDateTime recalledAt = message.getRecalledAt();
+        if (recalledAt == null) {
+            recalledAt = LocalDateTime.now();
+            message.recall(recalledAt);
+            privateMessageRepository.save(message);
+        }
+        return new MessageRecallResponse(
+                "PRIVATE",
+                message.getId(),
+                message.getSenderId(),
+                message.getReceiverId(),
+                recalledAt
+        );
+    }
+
+    @Transactional
+    public MessageRecallResponse recallPublicMessage(Long requesterId, boolean admin, Long messageId) {
+        PublicMessage message = publicMessageRepository.findById(messageId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "消息不存在"));
+        if (!admin && !message.getSenderId().equals(requesterId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "只能撤回自己发送的消息");
+        }
+        LocalDateTime recalledAt = message.getRecalledAt();
+        if (recalledAt == null) {
+            recalledAt = LocalDateTime.now();
+            message.recall(recalledAt);
+            publicMessageRepository.save(message);
+        }
+        return new MessageRecallResponse(
+                "PUBLIC",
+                message.getId(),
+                message.getSenderId(),
+                null,
+                recalledAt
+        );
+    }
+
+    private static MessageType parseMessageType(String value) {
+        if (value == null || value.isBlank()) {
+            return MessageType.TEXT;
+        }
+        try {
+            return MessageType.valueOf(value.trim().toUpperCase());
+        } catch (IllegalArgumentException exception) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "不支持的消息类型");
+        }
+    }
+
+    private static void validateMessageContent(String content, MessageType messageType) {
+        if (content == null || content.isBlank()) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "消息内容不能为空");
+        }
+        String normalizedContent = content.trim();
+        if (normalizedContent.length() > 2000) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "消息内容最多 2000 个字符");
+        }
+        if (messageType == MessageType.IMAGE && !isImageUrl(normalizedContent)) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "图片消息必须使用已上传的图片地址");
+        }
+    }
+
+    private static boolean isImageUrl(String content) {
+        return content.startsWith("/uploads/images/")
+                || content.startsWith("http://")
+                || content.startsWith("https://");
     }
 
     private void ensurePrivateChatAllowed(Long userId, Long friendId) {

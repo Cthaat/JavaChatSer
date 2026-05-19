@@ -89,5 +89,11 @@ export const useFriendsStore = defineStore('friends', {
         friend.user.id === userId ? { ...friend, unreadCount: 0 } : friend,
       )
     },
+    mergeRequest(request: FriendRequest) {
+      if (this.requests.some((item) => item.requestId === request.requestId)) {
+        return
+      }
+      this.requests = [request, ...this.requests]
+    },
   },
 })

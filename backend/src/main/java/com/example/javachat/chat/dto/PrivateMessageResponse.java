@@ -9,7 +9,9 @@ public record PrivateMessageResponse(
         Long receiverId,
         String content,
         String messageType,
+        boolean recalled,
         LocalDateTime readAt,
+        LocalDateTime recalledAt,
         LocalDateTime createdAt
 ) {
 
@@ -18,9 +20,11 @@ public record PrivateMessageResponse(
                 message.getId(),
                 message.getSenderId(),
                 message.getReceiverId(),
-                message.getContent(),
+                message.isRecalled() ? "" : message.getContent(),
                 message.getMessageType().name(),
+                message.isRecalled(),
                 message.getReadAt(),
+                message.getRecalledAt(),
                 message.getCreatedAt()
         );
     }

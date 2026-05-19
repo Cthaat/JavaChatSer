@@ -20,4 +20,10 @@ public interface FriendRepository extends JpaRepository<FriendRelation, Long> {
             Collection<Long> friendIds,
             FriendStatus status
     );
+
+    long countByStatus(FriendStatus status);
+
+    long countByUserIdAndStatus(Long userId, FriendStatus status);
+
+    long countByFriendIdAndStatus(Long friendId, FriendStatus status);
 }

@@ -2,12 +2,14 @@ package com.example.javachat.chat;
 
 import com.example.javachat.chat.dto.PrivateMessageResponse;
 import com.example.javachat.chat.dto.PrivateMessageSendRequest;
+import com.example.javachat.chat.dto.MessageRecallResponse;
 import com.example.javachat.chat.dto.PublicMessageResponse;
 import com.example.javachat.chat.dto.PublicMessageSendRequest;
 import com.example.javachat.chat.dto.ReadReceiptResponse;
 import com.example.javachat.common.ApiResponse;
 import com.example.javachat.common.PageResponse;
 import com.example.javachat.security.LoginUser;
+import com.example.javachat.user.UserRole;
 import com.example.javachat.websocket.ChatRealtimeNotifier;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -16,6 +18,7 @@ import jakarta.validation.constraints.Positive;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -91,8 +94,40 @@ public class ChatController {
             @AuthenticationPrincipal LoginUser loginUser,
             @Valid @RequestBody PublicMessageSendRequest request
     ) {
-        PublicMessageResponse response = chatService.sendPublicMessage(loginUser.id(), request.content());
+        PublicMessageResponse response = chatService.sendPublicMessage(
+                loginUser.id(),
+                request.content(),
+                request.messageType()
+        );
         chatRealtimeNotifier.broadcastPublicMessage(response);
+        return ApiResponse.success(response);
+    }
+
+    @DeleteMapping("/private/messages/{messageId}")
+    public ApiResponse<MessageRecallResponse> recallPrivateMessage(
+            @AuthenticationPrincipal LoginUser loginUser,
+            @PathVariable @Positive(message = "消息 ID 必须为正数") Long messageId
+    ) {
+        MessageRecallResponse response = chatService.recallPrivateMessage(
+                loginUser.id(),
+                loginUser.role() == UserRole.ADMIN,
+                messageId
+        );
+        chatRealtimeNotifier.notifyPrivateMessageRecall(response);
+        return ApiResponse.success(response);
+    }
+
+    @DeleteMapping("/public/messages/{messageId}")
+    public ApiResponse<MessageRecallResponse> recallPublicMessage(
+            @AuthenticationPrincipal LoginUser loginUser,
+            @PathVariable @Positive(message = "消息 ID 必须为正数") Long messageId
+    ) {
+        MessageRecallResponse response = chatService.recallPublicMessage(
+                loginUser.id(),
+                loginUser.role() == UserRole.ADMIN,
+                messageId
+        );
+        chatRealtimeNotifier.broadcastMessageRecall(response);
         return ApiResponse.success(response);
     }
 }

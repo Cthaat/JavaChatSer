@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { LogOut, MessageCircle, User, Users } from '@lucide/vue'
-import { computed } from 'vue'
+import { BarChart3, LogOut, MessageCircle, Moon, Sun, User, Users } from '@lucide/vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
@@ -11,6 +11,8 @@ const authStore = useAuthStore()
 const chatStore = useChatStore()
 const friendsStore = useFriendsStore()
 const router = useRouter()
+const theme = ref<'light' | 'dark'>('light')
+const THEME_KEY = 'javachat.theme'
 
 const unreadTotal = computed(() =>
   friendsStore.friends.reduce((total, friend) => total + friend.unreadCount, 0),
@@ -21,6 +23,21 @@ async function logout() {
   await authStore.logout()
   await router.replace({ name: 'login' })
 }
+
+function applyTheme(nextTheme: 'light' | 'dark') {
+  theme.value = nextTheme
+  document.documentElement.dataset.theme = nextTheme
+  localStorage.setItem(THEME_KEY, nextTheme)
+}
+
+function toggleTheme() {
+  applyTheme(theme.value === 'dark' ? 'light' : 'dark')
+}
+
+onMounted(() => {
+  const savedTheme = localStorage.getItem(THEME_KEY)
+  applyTheme(savedTheme === 'dark' ? 'dark' : 'light')
+})
 </script>
 
 <template>
@@ -45,6 +62,10 @@ async function logout() {
           <span>好友</span>
           <em v-if="friendsStore.requests.length > 0">{{ friendsStore.requests.length }}</em>
         </RouterLink>
+        <RouterLink to="/dashboard" class="nav-link">
+          <BarChart3 :size="18" />
+          <span>概览</span>
+        </RouterLink>
         <RouterLink to="/profile" class="nav-link">
           <User :size="18" />
           <span>资料</span>
@@ -57,6 +78,10 @@ async function logout() {
           <strong>{{ authStore.user?.nickname || authStore.user?.username }}</strong>
           <span>@{{ authStore.user?.username }}</span>
         </div>
+        <button class="icon-button" type="button" :title="theme === 'dark' ? '切换浅色模式' : '切换深色模式'" @click="toggleTheme">
+          <Sun v-if="theme === 'dark'" :size="18" />
+          <Moon v-else :size="18" />
+        </button>
         <button class="icon-button" type="button" title="退出登录" @click="logout">
           <LogOut :size="18" />
         </button>
