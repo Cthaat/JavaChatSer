@@ -25,6 +25,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketHttpHeaders;
@@ -71,6 +77,9 @@ class ChatWebSocketIntegrationTest {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    private TestRestTemplate restTemplate;
 
     private User admin;
     private User alice;
@@ -146,6 +155,37 @@ class ChatWebSocketIntegrationTest {
 
         aliceSession.sendMessage(new TextMessage("{\"type\":\"PING\"}"));
         assertThat(aliceHandler.awaitType(WebSocketMessageType.PONG).path("data").isNull()).isTrue();
+
+        adminSession.close();
+        aliceSession.close();
+    }
+
+    @Test
+    void restPublicMessageBroadcastsToOnlineWebSocketUsers() throws Exception {
+        QueueingWebSocketHandler adminHandler = new QueueingWebSocketHandler(objectMapper);
+        QueueingWebSocketHandler aliceHandler = new QueueingWebSocketHandler(objectMapper);
+
+        String adminToken = jwtTokenProvider.createToken(admin);
+        WebSocketSession adminSession = connect(adminToken, adminHandler);
+        WebSocketSession aliceSession = connect(jwtTokenProvider.createToken(alice), aliceHandler);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(adminToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                "/api/chats/public/messages",
+                new HttpEntity<>("{\"content\":\"rest public room\"}", headers),
+                String.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(objectMapper.readTree(response.getBody()).at("/data/content").asText())
+                .isEqualTo("rest public room");
+        assertThat(adminHandler.awaitType(WebSocketMessageType.PUBLIC_MESSAGE).at("/data/content").asText())
+                .isEqualTo("rest public room");
+        assertThat(aliceHandler.awaitType(WebSocketMessageType.PUBLIC_MESSAGE).at("/data/content").asText())
+                .isEqualTo("rest public room");
+        assertThat(publicMessageRepository.count()).isEqualTo(1);
 
         adminSession.close();
         aliceSession.close();

@@ -28,19 +28,22 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private final FriendRepository friendRepository;
     private final WebSocketSessionManager sessionManager;
     private final OnlineStatusService onlineStatusService;
+    private final ChatRealtimeNotifier chatRealtimeNotifier;
 
     public ChatWebSocketHandler(
             ObjectMapper objectMapper,
             ChatService chatService,
             FriendRepository friendRepository,
             WebSocketSessionManager sessionManager,
-            OnlineStatusService onlineStatusService
+            OnlineStatusService onlineStatusService,
+            ChatRealtimeNotifier chatRealtimeNotifier
     ) {
         this.objectMapper = objectMapper;
         this.chatService = chatService;
         this.friendRepository = friendRepository;
         this.sessionManager = sessionManager;
         this.onlineStatusService = onlineStatusService;
+        this.chatRealtimeNotifier = chatRealtimeNotifier;
     }
 
     @Override
@@ -119,7 +122,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private void handlePublicMessage(LoginUser loginUser, JsonNode payload) {
         String content = requiredText(payload, "content");
         PublicMessageResponse response = chatService.sendPublicMessage(loginUser.id(), content);
-        sessionManager.broadcast(WebSocketEnvelope.of(WebSocketMessageType.PUBLIC_MESSAGE, response));
+        chatRealtimeNotifier.broadcastPublicMessage(response);
     }
 
     private void notifyFriends(Long userId, boolean online) {

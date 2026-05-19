@@ -1,6 +1,6 @@
 # JavaChatSer Backend
 
-这里用于承载新版 Spring Boot 后端代码。当前已完成阶段 1 到阶段 6：Spring Boot 基础骨架、数据库迁移脚本、JPA 实体模型、Repository、JWT 认证模块、好友模块、私聊 REST 模块和 WebSocket 实时通信。
+这里用于承载新版 Spring Boot 后端代码。当前已完成阶段 1 到阶段 7：Spring Boot 基础骨架、数据库迁移脚本、JPA 实体模型、Repository、JWT 认证模块、好友模块、私聊 REST 模块、WebSocket 实时通信和公共聊天室 REST 接口。
 
 ## 目标技术栈
 
@@ -55,6 +55,8 @@
 - WebSocket `PRIVATE_MESSAGE` 会复用私聊服务，先写 MySQL、更新 Redis，再推送给发送者和接收者的在线连接。
 - WebSocket `PUBLIC_MESSAGE` 会写入 `public_message` 并缓存到 Redis `chat:public:recent`，随后广播给所有在线连接。
 - WebSocket `PING` 会返回 `PONG`，心跳消息会刷新在线状态 TTL。
+- `GET /api/chats/public/messages` 支持公共聊天室历史分页，按时间升序返回。
+- `POST /api/chats/public/messages` 支持发送公共消息，发送后先写 MySQL，再写 Redis `chat:public:recent`，最后向在线 WebSocket 连接广播。
 
 ## 数据库迁移
 
@@ -153,6 +155,25 @@ Invoke-RestMethod -Uri 'http://localhost:8080/api/chats/private/2/messages?page=
 ```powershell
 Invoke-RestMethod -Uri http://localhost:8080/api/chats/private/2/read `
   -Method Post `
+  -Headers @{ Authorization = "Bearer <token>" }
+```
+
+## 公共聊天室接口示例
+
+发送公共消息：
+
+```powershell
+Invoke-RestMethod -Uri http://localhost:8080/api/chats/public/messages `
+  -Method Post `
+  -ContentType 'application/json' `
+  -Headers @{ Authorization = "Bearer <token>" } `
+  -Body '{"content":"大家好"}'
+```
+
+查看公共消息历史：
+
+```powershell
+Invoke-RestMethod -Uri 'http://localhost:8080/api/chats/public/messages?page=0&size=20' `
   -Headers @{ Authorization = "Bearer <token>" }
 ```
 

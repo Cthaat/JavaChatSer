@@ -74,6 +74,13 @@ public class ChatService {
         return new ReadReceiptResponse(readCount, 0);
     }
 
+    @Transactional(readOnly = true)
+    public PageResponse<PublicMessageResponse> listPublicMessages(Pageable pageable) {
+        return PageResponse.from(publicMessageRepository
+                .findAllByOrderByCreatedAtAsc(pageable)
+                .map(PublicMessageResponse::from));
+    }
+
     @Transactional
     public PublicMessageResponse sendPublicMessage(Long senderId, String content) {
         if (content == null || content.isBlank()) {

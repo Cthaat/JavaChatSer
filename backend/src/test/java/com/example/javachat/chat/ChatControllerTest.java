@@ -55,6 +55,9 @@ class ChatControllerTest {
     private PrivateMessageRepository privateMessageRepository;
 
     @Autowired
+    private PublicMessageRepository publicMessageRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     private User admin;
@@ -64,6 +67,7 @@ class ChatControllerTest {
     @BeforeEach
     void setUp() {
         privateMessageRepository.deleteAll();
+        publicMessageRepository.deleteAll();
         friendRepository.deleteAll();
         userRepository.deleteAll();
 
@@ -159,6 +163,49 @@ class ChatControllerTest {
     @Test
     void privateMessageContentMustNotBeBlank() throws Exception {
         mockMvc.perform(post("/api/chats/private/{friendId}/messages", alice.getId())
+                        .header("Authorization", "Bearer " + tokenFor("admin"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"content\":\"   \"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(40000));
+    }
+
+    @Test
+    void publicMessagesCanBeSentAndLoadedFromHistory() throws Exception {
+        String adminToken = tokenFor("admin");
+        String aliceToken = tokenFor("alice");
+
+        mockMvc.perform(post("/api/chats/public/messages")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"content\":\"hello public\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data.senderId").value(admin.getId()))
+                .andExpect(jsonPath("$.data.content").value("hello public"))
+                .andExpect(jsonPath("$.data.messageType").value("TEXT"));
+
+        mockMvc.perform(post("/api/chats/public/messages")
+                        .header("Authorization", "Bearer " + aliceToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"content\":\"second public\"}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/chats/public/messages")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data.content", hasSize(2)))
+                .andExpect(jsonPath("$.data.content[0].content").value("hello public"))
+                .andExpect(jsonPath("$.data.content[1].content").value("second public"))
+                .andExpect(jsonPath("$.data.totalElements").value(2));
+    }
+
+    @Test
+    void publicMessageContentMustNotBeBlank() throws Exception {
+        mockMvc.perform(post("/api/chats/public/messages")
                         .header("Authorization", "Bearer " + tokenFor("admin"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"content\":\"   \"}"))
