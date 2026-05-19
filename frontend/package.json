@@ -1,0 +1,30 @@
+{
+  "name": "javachat-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "run-p type-check build-only",
+    "build-only": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "type-check": "vue-tsc --build --force"
+  },
+  "dependencies": {
+    "@lucide/vue": "^1.16.0",
+    "axios": "^1.7.9",
+    "pinia": "^2.2.6",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node22": "^22.0.0",
+    "@types/node": "^22.10.2",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/tsconfig": "^0.7.0",
+    "npm-run-all2": "^7.0.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3",
+    "vue-tsc": "^2.1.10"
+  }
+}
