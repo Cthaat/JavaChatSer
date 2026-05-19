@@ -8,6 +8,9 @@ import com.example.javachat.user.dto.AuthResponse;
 import com.example.javachat.user.dto.LoginRequest;
 import com.example.javachat.user.dto.RegisterRequest;
 import com.example.javachat.user.dto.UserProfileResponse;
+import com.example.javachat.user.dto.UserSearchResponse;
+import com.example.javachat.common.PageResponse;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,6 +67,14 @@ public class UserService {
                 .filter(User::isEnabled)
                 .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED));
         return UserProfileResponse.from(user);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<UserSearchResponse> searchUsers(Long currentUserId, String keyword, Pageable pageable) {
+        String normalizedKeyword = keyword.trim();
+        return PageResponse.from(userRepository
+                .searchEnabledUsers(normalizedKeyword, currentUserId, pageable)
+                .map(UserSearchResponse::from));
     }
 
     private AuthResponse toAuthResponse(User user) {

@@ -1,6 +1,6 @@
 # JavaChatSer Backend
 
-这里用于承载新版 Spring Boot 后端代码。当前已完成阶段 1 到阶段 3：Spring Boot 基础骨架、数据库迁移脚本、JPA 实体模型、Repository 和 JWT 认证模块。
+这里用于承载新版 Spring Boot 后端代码。当前已完成阶段 1 到阶段 4：Spring Boot 基础骨架、数据库迁移脚本、JPA 实体模型、Repository、JWT 认证模块和好友模块。
 
 ## 目标技术栈
 
@@ -37,6 +37,14 @@
 - `POST /api/auth/login` 支持用户名密码登录并返回 JWT。
 - `GET /api/auth/me` 支持通过 `Authorization: Bearer <token>` 获取当前用户。
 - `POST /api/auth/logout` 预留退出接口，前端清除 Token 即可完成退出。
+- `GET /api/users/search` 支持按用户名或昵称搜索用户，结果排除当前用户。
+- `POST /api/friends/requests` 支持发送好友申请。
+- `GET /api/friends/requests` 支持查询收到的好友申请。
+- `POST /api/friends/requests/{requestId}/accept` 支持接受申请并建立双向好友关系。
+- `POST /api/friends/requests/{requestId}/reject` 支持拒绝申请。
+- `GET /api/friends` 支持好友列表、在线状态和未读消息数。
+- `DELETE /api/friends/{friendId}` 支持双向删除好友。
+- 好友基础资料会缓存到 Redis `friend:list:{userId}`，在线状态和未读数每次实时计算。
 
 ## 数据库迁移
 
@@ -82,5 +90,31 @@ Invoke-RestMethod -Uri http://localhost:8080/api/auth/login `
 
 ```powershell
 Invoke-RestMethod -Uri http://localhost:8080/api/auth/me `
+  -Headers @{ Authorization = "Bearer <token>" }
+```
+
+## 好友接口示例
+
+搜索用户：
+
+```powershell
+Invoke-RestMethod -Uri 'http://localhost:8080/api/users/search?keyword=test' `
+  -Headers @{ Authorization = "Bearer <token>" }
+```
+
+发送好友申请：
+
+```powershell
+Invoke-RestMethod -Uri http://localhost:8080/api/friends/requests `
+  -Method Post `
+  -ContentType 'application/json' `
+  -Headers @{ Authorization = "Bearer <token>" } `
+  -Body '{"friendId":2}'
+```
+
+查看好友列表：
+
+```powershell
+Invoke-RestMethod -Uri http://localhost:8080/api/friends `
   -Headers @{ Authorization = "Bearer <token>" }
 ```
