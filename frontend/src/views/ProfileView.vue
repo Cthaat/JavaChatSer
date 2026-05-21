@@ -5,6 +5,13 @@ import { useRouter } from 'vue-router'
 
 import { getApiBaseUrl } from '@/api/client'
 import AppShell from '@/components/AppShell.vue'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
 import { useAuthStore } from '@/stores/auth'
 import { useChatStore } from '@/stores/chat'
 import { useFriendsStore } from '@/stores/friends'
@@ -37,6 +44,8 @@ const avatarUrl = computed(() => {
   const baseUrl = getApiBaseUrl()
   return baseUrl ? `${baseUrl}${url}` : url
 })
+
+const userInitial = computed(() => authStore.user?.nickname?.slice(0, 1) || authStore.user?.username?.slice(0, 1) || 'U')
 
 async function logout() {
   chatStore.reset()
@@ -72,65 +81,101 @@ onMounted(() => {
 
 <template>
   <AppShell>
-    <section class="page-stack">
-      <header class="panel-header">
+    <section class="space-y-6">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1>个人资料</h1>
-          <p>当前账号与实时连接状态。</p>
+          <h1 class="text-2xl font-semibold tracking-tight">个人资料</h1>
+          <p class="mt-1 text-sm text-muted-foreground">当前账号与实时连接状态。</p>
         </div>
-        <button class="icon-button" type="button" title="刷新资料" @click="authStore.restore()">
-          <RefreshCw :size="18" />
-        </button>
-      </header>
+        <Button variant="outline" size="icon" type="button" title="刷新资料" @click="authStore.restore()">
+          <RefreshCw class="size-4" />
+        </Button>
+      </div>
 
-      <section class="profile-grid">
-        <div class="surface profile-card">
-          <div class="profile-avatar">
-            <img v-if="avatarUrl" :src="avatarUrl" alt="头像" />
-            <span v-else>
-              {{ authStore.user?.nickname?.slice(0, 1) || authStore.user?.username?.slice(0, 1) || 'U' }}
-            </span>
-          </div>
-          <h2>{{ authStore.user?.nickname || authStore.user?.username }}</h2>
-          <p>@{{ authStore.user?.username }}</p>
-          <input ref="avatarInput" class="visually-hidden" type="file" accept="image/*" @change="uploadAvatar" />
-          <button class="secondary-button" type="button" :disabled="uploading" @click="avatarInput?.click()">
-            <Upload :size="18" />
-            <span>{{ uploading ? '上传中' : '上传头像' }}</span>
-          </button>
-          <button class="secondary-button" type="button" @click="logout">
-            <LogOut :size="18" />
-            <span>退出登录</span>
-          </button>
-          <p v-if="error" class="form-error">{{ error }}</p>
-          <p v-if="notice" class="form-notice">{{ notice }}</p>
-        </div>
-
-        <div class="surface">
-          <h2>账号信息</h2>
-          <dl class="definition-list">
-            <template v-for="[label, value] in profileRows" :key="label">
-              <dt>{{ label }}</dt>
-              <dd>{{ value }}</dd>
-            </template>
-          </dl>
-        </div>
-
-        <div class="surface">
-          <h2>运行状态</h2>
-          <div class="status-grid">
+      <section class="grid gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]">
+        <Card>
+          <CardHeader class="items-center text-center">
+            <Avatar class="size-24 rounded-lg">
+              <AvatarImage v-if="avatarUrl" :src="avatarUrl" alt="头像" />
+              <AvatarFallback class="rounded-lg text-3xl">{{ userInitial }}</AvatarFallback>
+            </Avatar>
             <div>
-              <Wifi :size="20" />
-              <span>WebSocket</span>
-              <strong>{{ chatStore.socketStatus }}</strong>
+              <CardTitle>{{ authStore.user?.nickname || authStore.user?.username }}</CardTitle>
+              <CardDescription>@{{ authStore.user?.username }}</CardDescription>
             </div>
-            <div>
-              <Shield :size="20" />
-              <span>好友数量</span>
-              <strong>{{ friendsStore.friends.length }}</strong>
-            </div>
-          </div>
-        </div>
+            <Badge variant="secondary">{{ authStore.user?.role }}</Badge>
+          </CardHeader>
+          <CardContent class="grid gap-3">
+            <input ref="avatarInput" class="sr-only" type="file" accept="image/*" @change="uploadAvatar" />
+            <Button variant="outline" type="button" :disabled="uploading" @click="avatarInput?.click()">
+              <Upload class="size-4" />
+              <span>{{ uploading ? '上传中' : '上传头像' }}</span>
+            </Button>
+            <Button variant="secondary" type="button" @click="logout">
+              <LogOut class="size-4" />
+              <span>退出登录</span>
+            </Button>
+            <Alert v-if="error" variant="destructive">
+              <AlertDescription>{{ error }}</AlertDescription>
+            </Alert>
+            <Alert v-if="notice" class="border-emerald-500/30 text-emerald-700 dark:text-emerald-300">
+              <AlertDescription>{{ notice }}</AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+
+        <Tabs default-value="account" class="space-y-4">
+          <TabsList>
+            <TabsTrigger value="account">账号信息</TabsTrigger>
+            <TabsTrigger value="runtime">运行状态</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="account">
+            <Card>
+              <CardHeader>
+                <CardTitle>账号信息</CardTitle>
+                <CardDescription>后端返回的当前登录用户资料。</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div class="overflow-hidden rounded-md border">
+                  <Table>
+                    <TableBody>
+                      <TableRow v-for="[label, value] in profileRows" :key="label">
+                        <TableCell class="w-32 font-medium text-muted-foreground">{{ label }}</TableCell>
+                        <TableCell class="break-words">{{ value }}</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="runtime">
+            <Card>
+              <CardHeader>
+                <CardTitle>运行状态</CardTitle>
+                <CardDescription>当前账号在聊天系统中的实时状态。</CardDescription>
+              </CardHeader>
+              <CardContent class="grid gap-4 sm:grid-cols-2">
+                <div class="rounded-lg border bg-muted/40 p-4">
+                  <Wifi class="size-5 text-muted-foreground" />
+                  <p class="mt-3 text-sm text-muted-foreground">WebSocket</p>
+                  <p class="mt-1 text-lg font-semibold">{{ chatStore.socketStatus }}</p>
+                  <Badge class="mt-3" :variant="chatStore.socketStatus === 'open' ? 'default' : 'secondary'">
+                    {{ chatStore.socketStatus === 'open' ? '实时在线' : '等待重连' }}
+                  </Badge>
+                </div>
+                <div class="rounded-lg border bg-muted/40 p-4">
+                  <Shield class="size-5 text-muted-foreground" />
+                  <p class="mt-3 text-sm text-muted-foreground">好友数量</p>
+                  <p class="mt-1 text-lg font-semibold">{{ friendsStore.friends.length }}</p>
+                  <Badge class="mt-3" variant="outline">联系人</Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </section>
     </section>
   </AppShell>

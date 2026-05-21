@@ -5,6 +5,13 @@ import { computed, onMounted, ref } from 'vue'
 import { statsApi } from '@/api'
 import { ApiError } from '@/api/client'
 import AppShell from '@/components/AppShell.vue'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table'
 import { useAuthStore } from '@/stores/auth'
 import { useChatStore } from '@/stores/chat'
 import { useFriendsStore } from '@/stores/friends'
@@ -94,27 +101,108 @@ onMounted(async () => {
 
 <template>
   <AppShell>
-    <section class="page-stack">
-      <header class="panel-header">
+    <section class="space-y-6">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1>系统概览</h1>
-          <p>{{ scopeText }}</p>
+          <h1 class="text-2xl font-semibold tracking-tight">系统概览</h1>
+          <p class="mt-1 text-sm text-muted-foreground">{{ scopeText }}</p>
         </div>
-        <button class="icon-button" type="button" title="刷新统计" :disabled="loading" @click="loadStats">
-          <RefreshCw :size="18" />
-        </button>
-      </header>
+        <Button variant="outline" size="icon" type="button" title="刷新统计" :disabled="loading" @click="loadStats">
+          <RefreshCw class="size-4" :class="{ 'animate-spin': loading }" />
+        </Button>
+      </div>
 
-      <p v-if="error" class="form-error">{{ error }}</p>
+      <Alert v-if="error" variant="destructive">
+        <AlertDescription>{{ error }}</AlertDescription>
+      </Alert>
 
-      <section class="metric-grid" aria-live="polite">
-        <article v-for="card in cards" :key="card.label" class="metric-card">
-          <component :is="card.icon" :size="22" />
-          <span>{{ card.label }}</span>
-          <strong>{{ card.value }}</strong>
-          <small>{{ card.hint }}</small>
-        </article>
+      <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-live="polite">
+        <Card v-for="card in cards" :key="card.label" class="overflow-hidden">
+          <CardHeader class="pb-2">
+            <CardDescription>{{ card.label }}</CardDescription>
+            <CardAction>
+              <div class="rounded-md border bg-muted/50 p-2">
+                <component :is="card.icon" class="size-4 text-muted-foreground" />
+              </div>
+            </CardAction>
+          </CardHeader>
+          <CardContent>
+            <Skeleton v-if="loading" class="h-9 w-20" />
+            <p v-else class="text-3xl font-semibold tracking-tight">{{ card.value }}</p>
+            <p class="mt-2 text-xs text-muted-foreground">{{ card.hint }}</p>
+          </CardContent>
+        </Card>
       </section>
+
+      <Tabs default-value="runtime" class="space-y-4">
+        <TabsList>
+          <TabsTrigger value="runtime">运行诊断</TabsTrigger>
+          <TabsTrigger value="scope">统计范围</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="runtime">
+          <Card>
+            <CardHeader>
+              <CardTitle>实时连接</CardTitle>
+              <CardDescription>当前浏览器和后端 WebSocket 的连接状态。</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div class="overflow-hidden rounded-md border">
+                <Table>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell class="font-medium">WebSocket</TableCell>
+                      <TableCell>{{ chatStore.socketStatus }}</TableCell>
+                      <TableCell class="text-right">
+                        <Badge :variant="chatStore.socketStatus === 'open' ? 'default' : 'secondary'">
+                          {{ chatStore.socketStatus === 'open' ? '已连接' : '重连中' }}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell class="font-medium">好友同步</TableCell>
+                      <TableCell>{{ friendsStore.friends.length }} 位好友</TableCell>
+                      <TableCell class="text-right">
+                        <Badge variant="outline">已加载</Badge>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell class="font-medium">账号</TableCell>
+                      <TableCell>{{ authStore.user?.username }}</TableCell>
+                      <TableCell class="text-right">
+                        <Badge variant="secondary">{{ authStore.user?.role }}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="scope">
+          <Card>
+            <CardHeader>
+              <CardTitle>统计范围</CardTitle>
+              <CardDescription>{{ scopeText }}</CardDescription>
+            </CardHeader>
+            <CardContent class="grid gap-4 sm:grid-cols-3">
+              <div class="rounded-lg border bg-muted/40 p-4">
+                <p class="text-sm text-muted-foreground">范围</p>
+                <p class="mt-1 text-lg font-semibold">{{ stats?.scope || 'PERSONAL' }}</p>
+              </div>
+              <div class="rounded-lg border bg-muted/40 p-4">
+                <p class="text-sm text-muted-foreground">待处理申请</p>
+                <p class="mt-1 text-lg font-semibold">{{ stats?.pendingFriendRequestCount ?? 0 }}</p>
+              </div>
+              <div class="rounded-lg border bg-muted/40 p-4">
+                <p class="text-sm text-muted-foreground">好友关系</p>
+                <p class="mt-1 text-lg font-semibold">{{ stats?.acceptedFriendCount ?? 0 }}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </section>
   </AppShell>
 </template>

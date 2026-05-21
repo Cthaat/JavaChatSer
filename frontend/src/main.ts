@@ -6,7 +6,7 @@ import router from './router'
 import './assets/styles.css'
 
 const savedTheme = localStorage.getItem('javachat.theme')
-document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light'
+document.documentElement.classList.toggle('dark', savedTheme === 'dark')
 
 const app = createApp(App)
 
