@@ -146,6 +146,15 @@ testUser3 / 123456
 
 功能截图建议放在 `docs/screenshots/`，答辩 PPT 或报告可以直接引用该目录。
 
+## 提交材料
+
+| 路径 | 说明 |
+| --- | --- |
+| `docs/JavaChatSer大作业报告.docx` | 正式大作业报告，已包含需求分析、软件设计、软件实现、结论、体会建议、UML 图和运行截图。 |
+| `docs/diagrams/` | 报告引用的用例图、模块关系图、组件图和 Docker Compose 部署图。 |
+| `docs/screenshots/` | 登录、注册、好友管理、公共聊天室、私聊、个人资料和系统概览截图。 |
+| `JavaChatSer-source-submit.zip` | 源代码提交包，已排除本地环境文件、依赖目录、构建产物和旧编译输出。 |
+
 ## 可能被问到的问题
 
 ### 为什么不用旧项目的原生 Socket？

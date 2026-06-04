@@ -125,9 +125,17 @@ npm run dev
 
 ## 文档
 
+- [大作业正式报告](docs/JavaChatSer大作业报告.docx)
 - [接口文档](docs/API.md)
 - [数据库与 Redis 设计](docs/DATABASE.md)
 - [答辩讲解指南](docs/DEFENSE_GUIDE.md)
 - [升级执行文档](docs/SPRING_BOOT_VUE_UPGRADE_GUIDE.md)
 
-功能截图建议放在 `docs/screenshots/`，便于答辩文档或 PPT 引用。
+大作业相关交付物：
+
+| 路径 | 说明 |
+| --- | --- |
+| `docs/JavaChatSer大作业报告.docx` | 按课程封面和格式要求整理的正式报告，个人信息和分工保留可编辑占位。 |
+| `docs/diagrams/` | 报告中引用的 UML/架构图，包括用例图、模块关系图、组件图和部署图。 |
+| `docs/screenshots/` | 报告中引用的运行效果图，包括登录、注册、好友、聊天、资料和概览页面。 |
+| `JavaChatSer-source-submit.zip` | 课程提交用源代码压缩包，排除 `.git`、`.env`、`node_modules`、`target`、`frontend/dist`、`out` 等非源码内容。 |
