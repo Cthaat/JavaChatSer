@@ -15,6 +15,7 @@ DOCS = ROOT / "docs"
 SCREENSHOTS = DOCS / "screenshots"
 DIAGRAMS = DOCS / "diagrams"
 REPORT = DOCS / "JavaChatSer大作业报告.docx"
+MEMBER_A_REPORT = DOCS / "JavaChatSer大作业报告-成员A.docx"
 COVER = DOCS / "大作业报告封面.docx"
 TASK_BOOK = DOCS / "《企业级应用开发 》课程大作业任务书.doc"
 FORMAT_RULES = DOCS / "大作业格式要求.doc"
@@ -662,6 +663,177 @@ this.socket.onmessage = (event) => this.handleSocketMessage(event.data)
         doc.Close(False)
 
 
+def generate_member_a_report(app) -> None:
+    generate_diagrams()
+    if MEMBER_A_REPORT.exists():
+        MEMBER_A_REPORT.unlink()
+
+    member_a_cases = [case for case in USE_CASES if case.owner == "成员A"]
+    doc = app.Documents.Add()
+    try:
+        set_page(doc)
+        set_normal_style(doc)
+        selection = app.Selection
+
+        type_para(selection, "NANCHANG UNIVERSITY", size=16, bold=True, align=WD_ALIGN_CENTER)
+        type_para(selection, f"《{COURSE_NAME}》大作业个人报告", size=20, bold=True, align=WD_ALIGN_CENTER)
+        type_para(selection, "", size=12, align=WD_ALIGN_CENTER)
+        add_table(selection, ["项目", "内容"], [
+            ["题    目", PROJECT_TITLE],
+            ["专    业", MAJOR],
+            ["班    级", CLASS_PLACEHOLDER],
+            ["学    号", "待填写（成员A本人学号）"],
+            ["姓    名", "待填写（成员A本人姓名）"],
+            ["组内身份", "成员A"],
+            ["主要分工", "后端用户与好友模块；负责用户搜索、好友申请、申请列表、申请处理、删除好友 5 个非基础用例。"],
+            ["任课教师", TEACHER_PLACEHOLDER],
+            ["完成时间", FINISH_DATE],
+        ], [3.2, 10.4])
+        selection.InsertBreak(WD_BREAK_PAGE)
+
+        type_para(selection, "JavaChatSer 在线即时聊天系统个人大作业报告", size=18, bold=True, align=WD_ALIGN_CENTER)
+        type_para(selection, "成员身份：成员A（后端用户与好友模块）", size=12, align=WD_ALIGN_CENTER)
+        type_para(selection, "姓名、学号、班级、任课教师：提交前替换为本人真实信息。", size=12, align=WD_ALIGN_CENTER)
+
+        heading(selection, "1 引言", 1)
+        heading(selection, "1.1 项目背景", 2)
+        type_para(selection, "JavaChatSer 是一个从传统 Servlet/JSP 聊天原型升级而来的 Spring Boot 3 + Vue 3 前后端分离聊天系统。课程要求每组使用 Vue 3.0 与 Spring Boot 3.0 开发具有一定规模和复杂度的企业级 Web 应用，因此本项目围绕在线即时聊天场景，重构并扩展了用户、好友、私聊、公共聊天室、实时通知、上传、统计和部署等功能。")
+        type_para(selection, "本人作为成员A，主要负责后端用户与好友管理模块。该模块是聊天系统的关系入口：用户需要先搜索目标用户、发送好友申请、等待对方处理并建立关系，之后才能进入私聊。好友模块还需要支持删除关系、缓存失效、在线状态和未读数聚合，为后续聊天功能提供稳定的数据基础。")
+        heading(selection, "1.2 个人开发目标", 2)
+        add_table(selection, ["目标类别", "个人目标"], [
+            ["需求目标", "完成 5 个非基础业务用例：搜索用户、发送好友申请、查看收到的申请、接受或拒绝申请、删除好友。"],
+            ["设计目标", "将好友相关逻辑放在 friend 包中，按 Controller、Service、Repository、DTO 分层，避免接口层直接处理业务规则。"],
+            ["实现目标", "实现好友申请状态流转、双向好友关系、重复关系校验、缓存失效和实时好友申请通知。"],
+            ["验证目标", "通过 FriendControllerTest 等自动化测试验证好友申请、接受、拒绝、删除和异常分支。"],
+        ], [3.0, 11.0])
+        heading(selection, "1.3 组内分工与本人职责", 2)
+        add_table(selection, ["成员", "主要分工", "负责用例", "说明"], [
+            [MEMBERS[0][0], MEMBERS[0][1], "UC-01 到 UC-05", "本人负责，聚焦用户与好友关系后端实现。"],
+            [MEMBERS[1][0], MEMBERS[1][1], "UC-06 到 UC-10", "负责私聊、图片消息、已读和撤回。"],
+            [MEMBERS[2][0], MEMBERS[2][1], "UC-11 到 UC-15", "负责公共聊天室、WebSocket 和部署。"],
+            [MEMBERS[3][0], MEMBERS[3][1], "UC-16 到 UC-20", "负责前端通知、上传、统计、主题和文档测试。"],
+        ], [3.0, 4.7, 3.0, 3.3])
+        type_para(selection, "登录、注册、退出登录等基础功能已实现，但不计入课程要求的“每位成员 5 个以上用例”。本报告重点说明成员A负责的 5 个非基础用例。")
+
+        heading(selection, "2 需求分析", 1)
+        heading(selection, "2.1 用户角色与业务边界", 2)
+        type_para(selection, "成员A模块面向普通用户和管理员两类角色。普通用户可以搜索其他用户、发送好友申请、查看收到的申请、接受或拒绝申请、删除好友；管理员在好友模块中暂不额外增加特殊权限，主要通过后续统计与消息管理模块体现管理员能力。")
+        add_picture(selection, DIAGRAMS / "uml-use-cases.png", "图 2-1 系统用例图（成员A负责 UC-01 到 UC-05）", 14.0)
+        heading(selection, "2.2 成员A负责用例", 2)
+        add_table(
+            selection,
+            ["编号", "用例", "主要流程", "验收标准"],
+            [[case.code, case.title, case.flow, case.acceptance] for case in member_a_cases],
+            [1.6, 3.0, 5.7, 5.0],
+        )
+        heading(selection, "2.3 成员A模块非功能需求", 2)
+        add_table(selection, ["类别", "要求"], [
+            ["安全性", "搜索用户、好友申请、处理申请和删除好友接口均需要 JWT 登录态；接口不能允许用户添加自己或绕过好友状态。"],
+            ["一致性", "接受好友申请时要建立双向 ACCEPTED 关系；删除好友时双方关系都应置为 DELETED，并清理双方好友缓存。"],
+            ["可维护性", "好友业务规则集中在 FriendService，Controller 只负责接收参数和返回统一响应。"],
+            ["可测试性", "使用 MockMvc 和 H2 内存数据库覆盖正常流程、重复申请、自我添加、非本人申请处理等场景。"],
+        ], [3.0, 11.0])
+
+        heading(selection, "3 软件设计", 1)
+        heading(selection, "3.1 总体架构", 2)
+        type_para(selection, "成员A模块位于整体 Spring Boot 后端中。前端好友页面通过 Axios 调用 /api/users/search、/api/friends、/api/friends/requests 等 REST 接口；后端 FriendController 接收请求后调用 FriendService；FriendService 使用 UserRepository 和 FriendRepository 访问 MySQL，并通过 FriendCacheService、PrivateChatCacheService 聚合在线状态和未读数。")
+        add_picture(selection, DIAGRAMS / "uml-components.png", "图 3-1 系统组件图", 14.0)
+        heading(selection, "3.2 成员A后端模块设计", 2)
+        add_picture(selection, DIAGRAMS / "uml-module-classes.png", "图 3-2 后端模块关系图", 14.0)
+        add_table(selection, ["类或模块", "职责"], [
+            ["UserController / UserService", "提供当前用户资料、用户搜索和头像更新等用户相关能力，其中成员A关注用户搜索。"],
+            ["FriendController", "暴露好友列表、发送申请、查看申请、接受申请、拒绝申请和删除好友 REST 接口。"],
+            ["FriendService", "集中处理好友状态流转、自我添加校验、重复关系校验、双向关系建立和缓存失效。"],
+            ["FriendRepository", "查询和保存 friend_relation 表，支持按用户、好友、状态和申请 ID 检索关系。"],
+            ["FriendCacheService", "缓存好友基础资料列表，聚合 Redis 在线状态，好友关系变化后清理缓存。"],
+            ["Friend DTO", "定义 FriendRequestCreateRequest、FriendRequestResponse、FriendResponse 和 FriendUserResponse 等接口数据结构。"],
+        ], [4.0, 10.0])
+        heading(selection, "3.3 数据库设计", 2)
+        add_table(selection, ["数据表", "成员A关注字段", "说明"], [
+            ["chat_user", "id、username、nickname、avatar_url、enabled", "用户搜索和好友展示依赖该表；enabled=false 的用户不能被添加。"],
+            ["friend_relation", "user_id、friend_id、status、created_at、updated_at", "保存好友申请和好友关系，status 包括 PENDING、ACCEPTED、REJECTED、DELETED。"],
+        ], [3.0, 5.0, 6.0])
+        type_para(selection, "好友接受后系统保存双向关系：A -> B 与 B -> A 都为 ACCEPTED。这样读取某个用户的好友列表时，只需按 user_id 和 ACCEPTED 查询即可，减少额外方向判断。")
+
+        heading(selection, "4 软件实现", 1)
+        heading(selection, "4.1 用户搜索实现", 2)
+        type_para(selection, "用户搜索接口用于在添加好友前定位目标用户。接口会根据用户名或昵称分页查询，并排除当前登录用户，避免用户把自己加入好友列表。搜索结果只返回必要展示字段，避免向前端暴露密码哈希等敏感信息。")
+        add_table(selection, ["接口", "路径", "说明"], [
+            ["搜索用户", "GET /api/users/search?keyword=&page=0&size=10", "按用户名或昵称搜索，排除当前用户。"],
+            ["好友列表", "GET /api/friends", "返回好友基础资料、在线状态和未读数。"],
+        ], [3.0, 6.0, 5.0])
+        heading(selection, "4.2 好友申请实现", 2)
+        type_para(selection, "发送好友申请时，系统先校验不能添加自己，再确认申请人和目标用户均存在且启用。随后同时检查正向和反向关系，只要存在 PENDING 或 ACCEPTED 状态，就认为好友关系或申请已存在，返回冲突错误。")
+        add_code_block(selection, "代码清单 4-1 发送好友申请关键代码", """
+if (requesterId.equals(friendId)) {
+    throw new BusinessException(ErrorCode.BAD_REQUEST, "不能添加自己为好友");
+}
+FriendRelation existingForward = friendRepository.findByUserIdAndFriendId(requesterId, friendId)
+        .orElse(null);
+FriendRelation existingReverse = friendRepository.findByUserIdAndFriendId(friendId, requesterId)
+        .orElse(null);
+if (isActiveRelation(existingForward) || isActiveRelation(existingReverse)) {
+    throw new BusinessException(ErrorCode.CONFLICT, "好友关系或申请已存在");
+}
+FriendRelation savedRelation = friendRepository.save(relation);
+chatRealtimeNotifier.notifyFriendRequest(targetUser.getId(), response);
+""")
+        type_para(selection, "该实现保证了同一对用户之间不会出现重复申请，也不会在对方已经发起申请时再次创建冲突数据。保存申请后还会通知在线接收者，使好友页能够实时更新待处理数量。")
+        heading(selection, "4.3 好友申请处理实现", 2)
+        type_para(selection, "接收者可以查看收到的 PENDING 申请，并选择接受或拒绝。接受申请时，系统会把原始申请置为 ACCEPTED，再创建或更新反向关系为 ACCEPTED，从而形成双向好友关系。拒绝申请时，只修改当前申请状态，不创建好友关系。")
+        add_code_block(selection, "代码清单 4-2 接受好友申请关键代码", """
+FriendRelation request = findPendingRequestForUser(userId, requestId);
+request.setStatus(FriendStatus.ACCEPTED);
+FriendRelation savedRequest = friendRepository.save(request);
+
+FriendRelation reverseRelation = friendRepository.findByUserIdAndFriendId(userId, request.getUserId())
+        .orElseGet(() -> new FriendRelation(userId, request.getUserId(), FriendStatus.ACCEPTED));
+reverseRelation.setStatus(FriendStatus.ACCEPTED);
+friendRepository.save(reverseRelation);
+
+evictFriendCaches(userId, request.getUserId());
+""")
+        type_para(selection, "findPendingRequestForUser 会校验申请是否属于当前用户，避免用户处理不属于自己的申请。接受后清理双方好友缓存，保证下一次读取好友列表能得到最新关系。")
+        heading(selection, "4.4 删除好友实现", 2)
+        type_para(selection, "删除好友并不直接物理删除记录，而是将双方 ACCEPTED 关系置为 DELETED。这样既保留历史状态，也避免聊天历史因好友关系删除而丢失。删除完成后同步清理双方 friend:list 缓存。")
+        add_code_block(selection, "代码清单 4-3 删除好友关键代码", """
+FriendRelation relation = friendRepository.findByUserIdAndFriendId(userId, friendId)
+        .filter(item -> item.getStatus() == FriendStatus.ACCEPTED)
+        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "好友关系不存在"));
+FriendRelation reverseRelation = friendRepository.findByUserIdAndFriendId(friendId, userId)
+        .filter(item -> item.getStatus() == FriendStatus.ACCEPTED)
+        .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "好友关系不存在"));
+
+relation.setStatus(FriendStatus.DELETED);
+reverseRelation.setStatus(FriendStatus.DELETED);
+friendRepository.save(relation);
+friendRepository.save(reverseRelation);
+evictFriendCaches(userId, friendId);
+""")
+        heading(selection, "4.5 运行效果", 2)
+        add_picture(selection, SCREENSHOTS / "03-friends.png", "图 4-1 好友管理页面：搜索用户、发送申请、处理申请和删除好友", 13.2)
+        heading(selection, "4.6 测试与验收", 2)
+        type_para(selection, "成员A相关测试主要位于 backend/src/test/java/com/example/javachat/friend/FriendControllerTest.java，同时用户搜索和头像等用户接口由 UserControllerTest 覆盖。后端整体测试使用 H2 内存数据库、MockMvc 和 Spring Boot Test，验证接口响应、业务状态和异常分支。")
+        add_table(selection, ["验证项", "命令或测试文件", "验收重点"], [
+            ["好友接口测试", "FriendControllerTest", "发送申请、重复申请、接受申请、拒绝申请、好友列表、删除好友。"],
+            ["用户接口测试", "UserControllerTest", "用户搜索、当前用户资料和头像相关接口。"],
+            ["后端回归测试", "cd backend; mvn test", "31 个测试通过，Failures=0，Errors=0，Skipped=0。"],
+            ["前端构建验证", "cd frontend; npm run build", "vue-tsc 类型检查与 vite build 生产构建通过。"],
+        ], [3.0, 5.0, 6.0])
+
+        heading(selection, "5 结论", 1)
+        type_para(selection, "成员A负责的后端用户与好友模块已经实现搜索用户、发送好友申请、查看收到的申请、接受或拒绝申请、删除好友 5 个非基础业务用例。模块采用 Spring Boot 3 分层结构，业务规则集中在 FriendService，数据通过 JPA Repository 持久化到 MySQL，并结合 Redis 缓存好友列表、在线状态和未读数。")
+        type_para(selection, "从项目整体看，好友模块为私聊功能提供了必要前置条件：非好友不能发送私聊，好友删除后关系状态会变化，好友列表可以显示在线状态和未读数。该模块与聊天、WebSocket、前端好友页之间形成了清晰协作关系。")
+
+        heading(selection, "6 体会与建议", 1)
+        type_para(selection, "通过负责成员A模块，我体会到企业级 Web 应用不能只关注单个接口是否能返回数据，还必须关注状态流转、权限边界、重复请求、缓存一致性和测试覆盖。好友关系看似简单，但如果不处理正反向关系、重复申请、自我添加和缓存失效，后续聊天功能就会出现数据不一致。")
+        type_para(selection, "后续如果继续完善，可以为好友模块增加申请备注、黑名单、好友分组、操作审计和更完整的端到端测试。现阶段实现已经满足课程对每位成员至少 5 个非基础用例、Spring Boot 3 + Vue 3 技术栈、文档说明和测试验证的要求。")
+
+        doc.SaveAs2(str(MEMBER_A_REPORT), FileFormat=WD_FORMAT_DOCX)
+    finally:
+        doc.Close(False)
+
+
 def should_package(path: Path) -> bool:
     rel = path.relative_to(ROOT)
     parts = set(rel.parts)
@@ -711,6 +883,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--diagrams-only", action="store_true", help="Only regenerate UML and deployment images.")
     parser.add_argument("--zip-only", action="store_true", help="Only rebuild JavaChatSer-source-submit.zip.")
+    parser.add_argument("--member-a-report-only", action="store_true", help="Only regenerate member A personal report.")
     parser.add_argument("--no-zip", action="store_true", help="Regenerate Word files without rebuilding source zip.")
     args = parser.parse_args()
 
@@ -719,6 +892,13 @@ def main() -> None:
         return
     if args.zip_only:
         generate_source_zip()
+        return
+    if args.member_a_report_only:
+        app = word_app()
+        try:
+            generate_member_a_report(app)
+        finally:
+            app.Quit()
         return
     generate_all(no_zip=args.no_zip)
 
