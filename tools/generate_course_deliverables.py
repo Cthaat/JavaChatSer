@@ -142,8 +142,97 @@ def canvas(title: str) -> tuple[Image.Image, ImageDraw.ImageDraw]:
     return image, draw
 
 
+def safe_filename(text: str) -> str:
+    return "".join(ch if ch.isalnum() or ch in {"-", "_"} else "-" for ch in text).strip("-")
+
+
+def dashed_line(draw: ImageDraw.ImageDraw, start: tuple[int, int], end: tuple[int, int], color: str = "#64748b") -> None:
+    sx, sy = start
+    ex, ey = end
+    segments = 18
+    for index in range(segments):
+        if index % 2 == 0:
+            x1 = sx + (ex - sx) * index / segments
+            y1 = sy + (ey - sy) * index / segments
+            x2 = sx + (ex - sx) * (index + 1) / segments
+            y2 = sy + (ey - sy) * (index + 1) / segments
+            draw.line([(x1, y1), (x2, y2)], fill=color, width=3)
+
+
+def draw_actor(draw: ImageDraw.ImageDraw, center_x: int, top_y: int, label: str) -> None:
+    color = "#334155"
+    draw.ellipse((center_x - 36, top_y, center_x + 36, top_y + 72), outline=color, width=5)
+    draw.line((center_x, top_y + 72, center_x, top_y + 185), fill=color, width=5)
+    draw.line((center_x - 78, top_y + 118, center_x + 78, top_y + 118), fill=color, width=5)
+    draw.line((center_x, top_y + 185, center_x - 72, top_y + 270), fill=color, width=5)
+    draw.line((center_x, top_y + 185, center_x + 72, top_y + 270), fill=color, width=5)
+    multiline(draw, (center_x - 130, top_y + 292, center_x + 130, top_y + 350), label, 28)
+
+
+def draw_use_case_ellipse(
+    draw: ImageDraw.ImageDraw,
+    box: tuple[int, int, int, int],
+    text: str,
+    fill: str = "#dbeafe",
+    outline: str = "#2563eb",
+    size: int = 30,
+) -> None:
+    draw.ellipse(box, fill=fill, outline=outline, width=4)
+    multiline(draw, box, text, size)
+
+
+def actors_for_use_case(use_case: UseCase) -> list[str]:
+    combined = f"{use_case.title} {use_case.flow} {use_case.acceptance}"
+    if "管理员" in combined:
+        return ["普通用户", "管理员"]
+    if use_case.code in {"UC-15", "UC-16"}:
+        return ["当前用户", "好友用户"]
+    return ["普通用户"]
+
+
+def generate_individual_use_case_diagrams() -> None:
+    DOCS.mkdir(parents=True, exist_ok=True)
+    palette = {
+        "成员A": ("#dbeafe", "#2563eb", "#eff6ff"),
+        "成员B": ("#dcfce7", "#16a34a", "#f0fdf4"),
+        "成员C": ("#fef3c7", "#d97706", "#fffbeb"),
+        "成员D": ("#ede9fe", "#7c3aed", "#f5f3ff"),
+    }
+    for use_case in USE_CASES:
+        accent_fill, accent_line, soft_fill = palette.get(use_case.owner, ("#e2e8f0", "#475569", "#f8fafc"))
+        image = Image.new("RGB", (1600, 1000), "#f8fafc")
+        draw = ImageDraw.Draw(image)
+        title = f"{use_case.code} {use_case.title} 用例图"
+        draw.text((56, 42), title, fill="#0f172a", font=font(42, bold=True))
+        draw.line([(56, 120), (1544, 120)], fill="#cbd5e1", width=3)
+
+        draw.rounded_rectangle((390, 185, 1250, 700), radius=22, fill="#ffffff", outline="#94a3b8", width=4)
+        draw.text((420, 210), "JavaChatSer 在线即时聊天系统", fill="#334155", font=font(28, bold=True))
+
+        draw_use_case_ellipse(draw, (610, 350, 1030, 505), f"{use_case.code}\n{use_case.title}", accent_fill, accent_line, 30)
+        draw_use_case_ellipse(draw, (900, 565, 1180, 665), "JWT 登录态\n/权限校验", "#f1f5f9", "#64748b", 22)
+        dashed_line(draw, (980, 505), (1040, 565), "#64748b")
+        draw.text((1010, 515), "<<include>>", fill="#64748b", font=font(20))
+
+        actors = actors_for_use_case(use_case)
+        if len(actors) == 1:
+            draw_actor(draw, 205, 330, actors[0])
+            draw.line([(305, 470), (610, 430)], fill="#64748b", width=4)
+        else:
+            draw_actor(draw, 205, 250, actors[0])
+            draw_actor(draw, 1390, 250, actors[1])
+            draw.line([(305, 390), (610, 420)], fill="#64748b", width=4)
+            draw.line([(1290, 390), (1030, 420)], fill="#64748b", width=4)
+
+        rounded_box(draw, (80, 760, 760, 910), f"主流程\n{use_case.flow}", soft_fill, accent_line, 25)
+        rounded_box(draw, (840, 760, 1520, 910), f"验收标准\n{use_case.acceptance}", "#ffffff", "#94a3b8", 25)
+        filename = DOCS / f"{use_case.code}-{safe_filename(use_case.title)}-用例图.png"
+        image.save(filename, quality=95)
+
+
 def generate_diagrams() -> None:
     DIAGRAMS.mkdir(parents=True, exist_ok=True)
+    generate_individual_use_case_diagrams()
 
     image, draw = canvas("JavaChatSer 用例图")
     member_x = [270, 650, 1030, 1410]
@@ -681,19 +770,18 @@ def generate_member_a_report(app) -> None:
         add_table(selection, ["项目", "内容"], [
             ["题    目", PROJECT_TITLE],
             ["专    业", MAJOR],
-            ["班    级", CLASS_PLACEHOLDER],
-            ["学    号", "待填写（成员A本人学号）"],
-            ["姓    名", "待填写（成员A本人姓名）"],
+            ["班    级", "待填写"],
+            ["学    号", "待填写"],
+            ["姓    名", "待填写"],
             ["组内身份", "成员A"],
             ["主要分工", "后端用户与好友模块；负责用户搜索、好友申请、申请列表、申请处理、删除好友 5 个非基础用例。"],
-            ["任课教师", TEACHER_PLACEHOLDER],
+            ["任课教师", "待填写"],
             ["完成时间", FINISH_DATE],
         ], [3.2, 10.4])
         selection.InsertBreak(WD_BREAK_PAGE)
 
         type_para(selection, "JavaChatSer 在线即时聊天系统个人大作业报告", size=18, bold=True, align=WD_ALIGN_CENTER)
-        type_para(selection, "成员身份：成员A（后端用户与好友模块）", size=12, align=WD_ALIGN_CENTER)
-        type_para(selection, "姓名、学号、班级、任课教师：提交前替换为本人真实信息。", size=12, align=WD_ALIGN_CENTER)
+        type_para(selection, "成员A个人报告（后端用户与好友模块）", size=12, align=WD_ALIGN_CENTER)
 
         heading(selection, "1 引言", 1)
         heading(selection, "1.1 项目背景", 2)
@@ -708,10 +796,10 @@ def generate_member_a_report(app) -> None:
         ], [3.0, 11.0])
         heading(selection, "1.3 组内分工与本人职责", 2)
         add_table(selection, ["成员", "主要分工", "负责用例", "说明"], [
-            [MEMBERS[0][0], MEMBERS[0][1], "UC-01 到 UC-05", "本人负责，聚焦用户与好友关系后端实现。"],
-            [MEMBERS[1][0], MEMBERS[1][1], "UC-06 到 UC-10", "负责私聊、图片消息、已读和撤回。"],
-            [MEMBERS[2][0], MEMBERS[2][1], "UC-11 到 UC-15", "负责公共聊天室、WebSocket 和部署。"],
-            [MEMBERS[3][0], MEMBERS[3][1], "UC-16 到 UC-20", "负责前端通知、上传、统计、主题和文档测试。"],
+            ["成员A（本人）", MEMBERS[0][1], "UC-01 到 UC-05", "本人负责，聚焦用户与好友关系后端实现。"],
+            ["成员B", MEMBERS[1][1], "UC-06 到 UC-10", "负责私聊、图片消息、已读和撤回。"],
+            ["成员C", MEMBERS[2][1], "UC-11 到 UC-15", "负责公共聊天室、WebSocket 和部署。"],
+            ["成员D", MEMBERS[3][1], "UC-16 到 UC-20", "负责前端通知、上传、统计、主题和文档测试。"],
         ], [3.0, 4.7, 3.0, 3.3])
         type_para(selection, "登录、注册、退出登录等基础功能已实现，但不计入课程要求的“每位成员 5 个以上用例”。本报告重点说明成员A负责的 5 个非基础用例。")
 
@@ -882,11 +970,15 @@ def generate_all(no_zip: bool = False) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--diagrams-only", action="store_true", help="Only regenerate UML and deployment images.")
+    parser.add_argument("--individual-use-case-diagrams-only", action="store_true", help="Only regenerate 20 individual use case diagrams in docs/.")
     parser.add_argument("--zip-only", action="store_true", help="Only rebuild JavaChatSer-source-submit.zip.")
     parser.add_argument("--member-a-report-only", action="store_true", help="Only regenerate member A personal report.")
     parser.add_argument("--no-zip", action="store_true", help="Regenerate Word files without rebuilding source zip.")
     args = parser.parse_args()
 
+    if args.individual_use_case_diagrams_only:
+        generate_individual_use_case_diagrams()
+        return
     if args.diagrams_only:
         generate_diagrams()
         return
