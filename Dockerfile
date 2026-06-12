@@ -30,3 +30,4 @@ CMD ["/start.sh"]
 
 # 使用 Tomcat 默认的 ENTRYPOINT 启动服务
 CMD ["catalina.sh", "run"]
+
